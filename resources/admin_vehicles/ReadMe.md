@@ -1,6 +1,3 @@
----
-
-```markdown
 # 🚗 سیستم هوشمند مدیریت ناوگان نقلیه (Admin Vehicles System)
 
 <div align="center">
@@ -370,4 +367,3 @@ ServerScript --> DBInstance : TCP Connection (dbExec / dbQuery)
    start admin_vehicles
    ```
 4. داخل بازی با فشردن کلید **`F6`** یا دستور **`/vehpanel`** پنل را باز کنید.
-```
