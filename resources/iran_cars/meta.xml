@@ -1,0 +1,33 @@
+<meta>
+    <info author="Pack Irani" type="script" version="1.0.0" />
+    <script src="client.lua" type="client" />
+
+    <!-- ماشین‌ها -->
+    <file src="admiral.dff" /><file src="admiral.txd" />
+    <file src="ambulan.dff" /><file src="ambulan.txd" />
+    <file src="blistac.dff" /><file src="blistac.txd" />
+    <file src="bobcat.dff" /><file src="bobcat.txd" />
+    <file src="buccanee.dff" /><file src="buccanee.txd" />
+    <file src="bus.dff" /><file src="bus.txd" />
+    <file src="cabbie.dff" /><file src="cabbie.txd" />
+    <file src="club.dff" /><file src="club.txd" />
+    <file src="coach.dff" /><file src="coach.txd" />
+    <file src="copcarru.dff" /><file src="copcarru.txd" />
+    <file src="copcarvg.dff" /><file src="copcarvg.txd" />
+    <file src="dft30.dff" /><file src="dft30.txd" />
+    <file src="esperant.dff" /><file src="esperant.txd" />
+    <file src="greenwoo.dff" /><file src="greenwoo.txd" />
+    <file src="landstal.dff" /><file src="landstal.txd" />
+    <file src="majestic.dff" /><file src="majestic.txd" />
+    <file src="nrg500.dff" /><file src="nrg500.txd" />
+    <file src="oceanic.dff" /><file src="oceanic.txd" />
+    <file src="pcj600.dff" /><file src="pcj600.txd" />
+    <file src="picador.dff" /><file src="picador.txd" />
+    <file src="previon.dff" /><file src="previon.txd" />
+    <file src="primo.dff" /><file src="primo.txd" />
+    <file src="sentinel.dff" /><file src="sentinel.txd" />
+    <file src="stratum.dff" /><file src="stratum.txd" />
+    <file src="supergt.dff" /><file src="supergt.txd" />
+    <file src="taxi.dff" /><file src="taxi.txd" />
+    <file src="tractor.dff" /><file src="tractor.txd" />
+</meta>
