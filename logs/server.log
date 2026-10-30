@@ -7817,3 +7817,71 @@
 [2026-10-29 20:08:09] JOIN: SilentGalaxy joined the game (IP: 192.168.1.3)
 [2026-10-29 20:08:13] WARNING: auth\modules\account\server_auth.lua:15: Access denied @ 'setPlayerMuted'
 [2026-10-29 20:08:38] WARNING: auth\modules\account\server_auth.lua:15: Access denied @ 'setPlayerMuted'
+==================================================================
+= Multi Theft Auto: San Andreas v1.6
+==================================================================
+= Server name      : My Custom MTA Server
+= Server IP address: auto
+= Server port      : 22003
+= 
+= Log file         : ../mta/server/mods/deathmatch/logs/server.log
+= Maximum players  : 32
+= HTTP port        : 22005
+= Voice Chat       : Disabled
+= Bandwidth saving : Medium
+==================================================================
+[2026-10-30 13:38:39] Resources: 10 loaded, 0 failed
+[2026-10-30 13:38:39] Starting resources...
+[2026-10-30 13:38:39] ERROR: Couldn't find resource admin. Check it exists.
+==================================================================
+= Multi Theft Auto: San Andreas v1.6
+==================================================================
+= Server name      : My Custom MTA Server
+= Server IP address: auto
+= Server port      : 22003
+= 
+= Log file         : ../mta/server/mods/deathmatch/logs/server.log
+= Maximum players  : 32
+= HTTP port        : 22005
+= Voice Chat       : Disabled
+= Bandwidth saving : Medium
+==================================================================
+[2026-10-30 13:38:53] Resources: 10 loaded, 0 failed
+[2026-10-30 13:38:53] Starting resources...
+[2026-10-30 13:38:53] ERROR: Couldn't find resource admin. Check it exists.
+[2026-10-30 13:38:53] INFO: [AUTH/DB] MySQL Connected successfully.
+[2026-10-30 13:38:53] ERROR: Couldn't find resource hud. Check it exists.
+[2026-10-30 13:38:53] WARNING: admin_vehicles/server.lua(Line 248) [Server] warpPlayerIntoVehicle is deprecated and may not work in future versions. Please replace with warpPedIntoVehicle before Tuesday.
+[2026-10-30 13:38:53] Some files in 'admin_vehicles' use deprecated functions.
+[2026-10-30 13:38:53] Use the 'upgrade' command to perform a basic upgrade of resources.
+[2026-10-30 13:38:53] INFO: [MySQL] دیتابیس با موفقیت متصل شد.
+[2026-10-30 13:38:53] WARNING: veh_core/client.lua(Line 127) [Client] setControlState is deprecated and may not work in future versions. Please replace with setPedControlState before Tuesday.
+[2026-10-30 13:38:53] WARNING: veh_core/client.lua(Line 167) [Client] getControlState is deprecated and may not work in future versions. Please replace with getPedControlState before Tuesday.
+[2026-10-30 13:38:53] WARNING: veh_core/client.lua(Line 306) [Client] getControlState is deprecated and may not work in future versions. Please replace with getPedControlState before Tuesday.
+[2026-10-30 13:38:53] Some files in 'veh_core' use deprecated functions.
+[2026-10-30 13:38:53] Use the 'upgrade' command to perform a basic upgrade of resources.
+[2026-10-30 13:38:53] Authorized serial account protection is enabled for the ACL group(s): `Admin`  See http://multitheftauto.com/authserial
+[2026-10-30 13:38:53] WARNING: <owner_email_address> not set
+[2026-10-30 13:38:53] Server started and is ready to accept connections!
+[2026-10-30 13:38:53] To stop the server, type 'shutdown' or press Ctrl-C
+[2026-10-30 13:38:53] Type 'help' for a list of commands.
+[2026-10-30 13:38:53] INFO: [Vehicles] 56 خودرو بررسی و بارگذاری شدند.
+[2026-10-30 13:38:53] Querying MTA master server... success! (Auto detected IP:77.77.106.222)
+==================================================================
+= Multi Theft Auto: San Andreas v1.6
+==================================================================
+= Server name      : My Custom MTA Server
+= Server IP address: auto
+= Server port      : 22003
+= 
+= Log file         : ../mta/server/mods/deathmatch/logs/server.log
+= Maximum players  : 32
+= HTTP port        : 22005
+= Voice Chat       : Disabled
+= Bandwidth saving : Medium
+==================================================================
+[2026-10-30 13:39:00] Resources: 10 loaded, 0 failed
+[2026-10-30 13:39:00] ERROR: Could not bind the server on interface '' and port '22003'!
+[2026-10-30 13:39:01] Server stopped!
+[2026-10-30 13:39:01] Stopping resources...
+[2026-10-30 13:39:01] Closing SQLite3 database
