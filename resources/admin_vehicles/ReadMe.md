@@ -134,3 +134,296 @@ local db = dbConnect("mysql", "dbname=نام_دیتابیس;host=127.0.0.1;port=
 
 ---
 **توسعه داده شده برای بهبود کیفیت و سرعت ادمینی در سرورهای ام‌تی‌ای.**
+
+
+
+
+
+
+
+
+---
+
+## 📊 دیاگرام‌های معماری، جریان داده و تجربه کاربری (PlantUML)
+
+---
+
+### ۱. معماری کلی سیستم و روابط فایل‌ها (Component Architecture)
+> **توضیح:** این دیاگرام نحوه ارتباط فایل‌های پروژه از لایه مرورگر کلاینت تا هسته سرور و پایگاه‌داده MySQL را نشان می‌دهد. فایل `meta.xml` نقطه ورود است که وظیفه تزریق رابط کاربری و اسکریپت‌ها به محیط کلاینت و سرور را برعهده دارد.
+
+```plantuml
+@startuml
+!theme plain
+skinparam backgroundColor #0E121E
+skinparam ArrowColor #00FFCC
+skinparam ComponentBorderColor #00FFCC
+skinparam ComponentBackgroundColor #1E293B
+skinparam ComponentFontColor #FFFFFF
+skinparam DatabaseBackgroundColor #1E293B
+skinparam DatabaseBorderColor #00FFCC
+skinparam DatabaseFontColor #FFFFFF
+
+package "Client Environment (MTA Client)" {
+    [meta.xml] ..> [ui/index.html] : بارگذاری در مرورگر CEF
+    [meta.xml] ..> [client.lua] : اجرای اسکریپت کلاینت
+    [ui/index.html] <--> [client.lua] : ارتباط مستقیم (JS / Lua Bridge)
+}
+
+package "Server Environment (MTA Server)" {
+    [meta.xml] ..> [server.lua] : بارگذاری منطق سرور
+    [client.lua] <..> [server.lua] : تبادل رویدادها (triggerServerEvent / triggerClientEvent)
+    database "MySQL Database\n(server_vehicles)" as DB
+    [server.lua] <--> DB : ذخیره، خواندن و حذف ناهمگام (dbExec / dbQuery)
+    [server.lua] --> [Game World Elements] : ساخت و مدیریت خودروها (createVehicle)
+}
+@enduml
+```
+
+---
+
+### ۲. نقشه سفر ادمین و جریان بصری (Admin Journey & Screen Flow)
+> **توضیح:** زاویه دید ادمین از لحظه فشردن کلید تا انتخاب خودرو، رانندگی به سمت محل پارک، فشردن دکمه ثبت و مدیریت نهایی را به تصویر می‌کشد.
+
+```plantuml
+@startuml
+!theme plain
+skinparam backgroundColor #0E121E
+skinparam ActivityBackgroundColor #1E293B
+skinparam ActivityBorderColor #00FFCC
+skinparam ActivityFontColor #FFFFFF
+skinparam ArrowColor #00FFCC
+
+start
+:فشردن کلید F6 یا دستور /vehpanel;
+:باز شدن پنل شیشه‌ای نئونی (CEF);
+
+if (ادمین پیاده است یا سوار ماشین؟) then (پیاده)
+    :ورود به تب "اسپاون ماشین جدید";
+    :انتخاب مدل و کلیک روی دکمه "اسپاون";
+    :انتقال خودکار ادمین پشت فرمان خودرو;
+else (سوار ماشین)
+    :شناسایی آنی مدل و وضعیت خودرو در بالای پنل;
+endif
+
+:رانندگی به محل دلخواه برای پارک دائمی;
+:کلیک روی دکمه سبز رنگ "ثبت موقعیت پارک";
+:ثبت مختصات در دیتابیس و نمایش شناسه خودرو (#ID);
+
+fork
+    :🎯 ارسال فلش روی سقف و علامت نقشه;
+fork again
+    :🚀 تلپورت در مواقع نیاز;
+fork again
+    :🔄 بازگردانی موقعیت (ریست پارک);
+fork again
+    :🗑️ حذف دائمی از نقشه و دیتابیس;
+end fork
+
+stop
+@enduml
+```
+
+---
+
+### ۳. دیاگرام توالی اسپاون و پارک دائمی (Sequence: Spawn & Save)
+> **توضیح:** این دیاگرام چرخه تعاملی بین پنل تحت وب، اسکریپت کلاینت، اسکریپت سرور، دیتابیس و هسته بازی را در فرایند ساخت خودرو تا ذخیره‌سازی ابدی در دیتابیس نمایش می‌دهد.
+
+```plantuml
+@startuml
+!theme plain
+autonumber
+skinparam backgroundColor #0E121E
+skinparam ParticipantBorderColor #00FFCC
+skinparam ParticipantBackgroundColor #1E293B
+skinparam ParticipantFontColor #FFFFFF
+skinparam ArrowColor #00FFCC
+skinparam SequenceLifeLineBorderColor #00FFCC
+skinparam SequenceGroupBackgroundColor #141B2D
+skinparam SequenceGroupBorderColor #00FFCC
+skinparam SequenceGroupFontColor #FFFFFF
+
+actor "Admin" as Admin
+participant "Web UI (JS)" as UI
+participant "Client Lua" as Client
+participant "Server Lua" as Server
+database "MySQL" as DB
+participant "Game Engine" as Engine
+
+Admin -> UI : کلیک روی دکمه اسپاون مدل
+UI -> Client : triggerMTA('onWebSpawnNew', id)
+Client -> Server : triggerServerEvent("onAdminCreatePermanentVehicle")
+Server -> Engine : createVehicle() & warpPlayerIntoVehicle()
+Engine --> Admin : ادمین بلافاصله سوار خودرو می‌شود
+
+Admin -> UI : کلیک روی دکمه "ثبت موقعیت پارک"
+UI -> Client : triggerMTA('onWebSaveCurrentCar')
+Client -> Server : triggerServerEvent("onAdminSaveCurrentOccupiedVehicle")
+
+Server -> DB : INSERT INTO server_vehicles (coords, model)
+DB --> Server : Return insertId
+Server -> Engine : setVehicleRespawnPosition()
+Server -> Client : triggerClientEvent("receiveSavedVehiclesList", list)
+Client -> UI : executeBrowserJavascript(updatePanelData)
+UI --> Admin : نمایش خودرو در لیست به همراه شناسه یکتا (#ID)
+@enduml
+```
+
+---
+
+### ۴. فلوچارت الگوریتم هوشمند ضد انفجار (Anti-Stack & Smart Sync)
+> **توضیح:** هسته حیاتی پشت سرور! هنگام استارت سرور یا ریسورس، سیستم ابتدا دنیای بازی را اسکن می‌کند تا از ساخت خودروهای تکراری روی هم که منجر به پرتاب و انفجار آن‌ها می‌شود، جلوگیری کند.
+
+```plantuml
+@startuml
+!theme plain
+skinparam backgroundColor #0E121E
+skinparam ActivityBackgroundColor #1E293B
+skinparam ActivityBorderColor #00FFCC
+skinparam ActivityFontColor #FFFFFF
+skinparam ArrowColor #00FFCC
+skinparam ConditionFontColor #FFFFFF
+
+start
+:رویداد onResourceStart / بارگذاری لیست دیتابیس;
+:دریافت رکوردهای جدول `server_vehicles`;
+
+while (آیا رکورد دیگری در جدول وجود دارد؟) is (بله)
+    :خواندن مختصات (X, Y, Z) و ID دیتابیس;
+    :اسکن خودروهای موجود در سرور (getElementsByType);
+    
+    if (خودرویی با این DBID یا در فاصله کمتر از 2.0 متر وجود دارد؟) then (بله - وجود دارد)
+        :ارتقا و متصل‌کردن خودروی حاضر (Smart Sync);
+        :تخصیص مجدد ElementData و بدون دست‌کاری آبجکت;
+        note right: مانع از اسپاون مجدد و ترکیدن خودروها
+    else (خیر - موجود نیست)
+        :ساخت خودروی جدید با createVehicle();
+        :تنظیم موقعیت ریسپاون خودکار;
+        :ثبت ElementData (شناسه، تاریخ و وضعیت دائمی);
+    endif
+endwhile (خیر)
+
+:پایان فرایند و آماده‌سازی پنل;
+stop
+@enduml
+```
+
+---
+
+### ۵. مسیر تبادل داده و ارتباط دوطرفه (Full-Duplex Data Bus)
+> **توضیح:** این دیاگرام نحوه تبدیل داده‌ها را نمایش می‌دهد: چطور اطلاعات دیتابیس سرور به صورت ساختار JSON فشرده شده و بدون افت فریم توسط وب‌ویو رندر می‌شود.
+
+```plantuml
+@startuml
+!theme plain
+skinparam backgroundColor #0E121E
+skinparam RectangleBorderColor #00FFCC
+skinparam RectangleBackgroundColor #1E293B
+skinparam RectangleFontColor #FFFFFF
+skinparam ArrowColor #00FFCC
+
+rectangle "1. Web Layer\n(HTML5 DOM)" as Web {
+    card "دکمه‌های UI و رویدادها\n(onclick, JS Events)" as W1
+    card "تابع رندر مجدد\nupdatePanelData(cars, current)" as W2
+}
+
+rectangle "2. Client Lua Layer\n(Internal Browser Engine)" as Client {
+    card "دریافت از وب با\naddEvent / triggerMTA" as C1
+    card "تزریق مستقیم جاوااسکریپت\nexecuteBrowserJavascript" as C2
+}
+
+rectangle "3. Server Lua Layer\n(Network & Logic)" as Server {
+    card "دریافت تقاضا و واکشی\n(dbQuery & dbPoll)" as S1
+    card "تبدیل داده به رشته امن\ntoJSON(list, true)" as S2
+}
+
+database "MySQL Database" as DB
+
+W1 -down-> C1 : Event Handlers
+C1 -down-> S1 : triggerServerEvent
+S1 -down-> DB : SELECT / UPDATE
+DB -up-> S2 : Query Results
+S2 -up-> C2 : triggerClientEvent
+C2 -up-> W2 : Browser DOM Execution
+@enduml
+```
+
+---
+
+### ۶. دیاگرام وضعیت عملیات ادمینی روی وسایل نقلیه (Vehicle States & Actions)
+> **توضیح:** نشان‌دهنده چرخه‌ای است که هر وسیله نقلیه در سرور طی می‌کند؛ از لحظه اسپاون اولیه تا حالت ثبت‌شده و عملیاتی که می‌تواند وضعیت آن را تغییر دهد.
+
+```plantuml
+@startuml
+!theme plain
+skinparam backgroundColor #0E121E
+skinparam StateBorderColor #00FFCC
+skinparam StateBackgroundColor #1E293B
+skinparam StateFontColor #FFFFFF
+skinparam ArrowColor #00FFCC
+
+[*] --> خودروی_موقت : کلیک روی Spawn در پنل
+
+state خودروی_موقت {
+    خودروی_موقت : بدون ID دیتابیس
+    خودروی_موقت : با ریستارت سرور از بین می‌رود
+}
+
+خودروی_موقت --> خودروی_دائمی : کلیک روی "ثبت موقعیت پارک" (/park)
+
+state خودروی_دائمی {
+    خودروی_دائمی : دارای ID دیتابیس ثابت
+    خودروی_دائمی : بارگذاری خودکار بعد از ریستارت
+    
+    state "دارای فلش نئونی و Blip" as Marked
+    state "مستقر در نقطه اولیه پارک" as Parked
+    state "در حال رانندگی / جابجایی" as Moved
+    
+    Moved --> Parked : دکمه 🔄 ریست
+    Parked --> Marked : دکمه 🎯 فلش
+    Marked --> Parked : لغو یا حذف مارکر
+}
+
+خودروی_دائمی --> [*] : دکمه 🗑️ حذف (پاکسازی کامل از بازی و دیتابیس)
+@enduml
+```
+
+---
+
+### ۷. نمودار رابطه موجودیت پایگاه‌داده و متادیتا (ER & ElementData Schema)
+> **توضیح:** نمایش فیلدهای ذخیره‌شده در پایگاه‌داده MySQL و نگاشت متناظر آن‌ها با شناسه و خواص زنده خودرو درون سرور MTA (`ElementData`).
+
+```plantuml
+@startuml
+!theme plain
+skinparam backgroundColor #0E121E
+skinparam ClassBorderColor #00FFCC
+skinparam ClassBackgroundColor #1E293B
+skinparam ClassFontColor #FFFFFF
+skinparam ArrowColor #00FFCC
+
+entity "MySQL: server_vehicles" as Table {
+    * **id** : INT (PK, AutoIncrement)
+    --
+    * **model** : INT (GTA Vehicle Model ID)
+    * **x** : FLOAT (مختصات طول)
+    * **y** : FLOAT (مختصات عرض)
+    * **z** : FLOAT (مختصات ارتفاع)
+    * **rx** : FLOAT (زاویه Roll)
+    * **ry** : FLOAT (زاویه Pitch)
+    * **rz** : FLOAT (زاویه پلاک / Yaw)
+    * **plate** : VARCHAR(32)
+    * **created_at** : TIMESTAMP
+    * **updated_at** : TIMESTAMP
+}
+
+entity "GTA Vehicle ElementData" as Runtime {
+    * **dbid** : عدد شناسه دیتابیس
+    * **veh:id** : شناسه سازگار با سایر گیم‌مودها
+    * **isPermanent** : بولین (true)
+    * **created_at** : رشته زمان ایجاد
+    * **updated_at** : رشته زمان آخرین پارک
+}
+
+Table ||--|| Runtime : "همگام‌سازی دوطرفه داده‌ها در زمان اجرا"
+@enduml
+```
