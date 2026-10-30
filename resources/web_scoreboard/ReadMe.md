@@ -1,5 +1,5 @@
 # ⚡ Web Scoreboard (CEF Modern RP Scoreboard)
-
+![0](image-7.png)
 > اسکوربورد مدرن، فوق‌سریع و شیشه‌ای (Dark-Glass) مبتنی بر وب (CEF) برای سرورهای رول‌پلی ام‌تی‌ای (MTA:SA) با پشتیبانی کامل از زبان فارسی و راست‌چین (RTL).
 
 ---
