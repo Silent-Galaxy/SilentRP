@@ -8078,3 +8078,6 @@
 ==================================================================
 [2026-10-30 20:54:39] Resources: 9 loaded, 0 failed
 [2026-10-30 20:54:39] ERROR: Could not bind the server on interface '' and port '22003'!
+[2026-10-30 20:55:08] CONNECT: SilentGalaxy connected (IP: 192.168.1.3  Serial: C8779B48243D9EB1BDB4DED901100C43  Version: 1.6.0-9.24149.0)
+[2026-10-30 20:55:09] JOIN: SilentGalaxy joined the game (IP: 192.168.1.3)
+[2026-10-30 20:55:13] WARNING: auth\modules\account\server_auth.lua:15: Access denied @ 'setPlayerMuted'
