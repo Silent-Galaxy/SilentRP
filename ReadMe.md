@@ -155,12 +155,3 @@
 
 
 ---
-
-### نحوه ارسال این فایل به گیت‌هاب (با ترمینال):
-
-همون فایل رو ساختی و ذخیره کردی؟ حالا این ۳ تا دستور ساده رو در ترمینال VS Code بزن تا بره روی گیت‌هاب و صفحه پروژه‌ات حرفه‌ای نمایش داده بشه:
-
-```powershell
-git add README.md
-git commit -m "docs: add academic modular README architecture"
-git push origin main
