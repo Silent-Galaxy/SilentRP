@@ -9,8 +9,6 @@
 
 👉 **[صفحه دانلود پکیج خودروهای ایرانی (GTA5ModSkin)](https://gta5modskin.rozblog.com/post/32)**
 
-![alt text](image.png)
-
 ---
 
 ### 📂 ۲. ساختار و نمونه چیدمان فایل‌ها (نحوه نصب)
