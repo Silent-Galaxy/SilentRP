@@ -140,3 +140,287 @@ CREATE TABLE IF NOT EXISTS `patient_stats` (
 db = dbConnect("mysql", "dbname=mta_db;host=127.0.0.1;charset=utf8mb4", "root", "PASSWORD")
 ```
 5. در کنسول سرور دستور `refresh` و سپس `start death_system` را وارد نمایید.
+
+
+
+
+
+
+
+## 📊 دیاگرام‌های مهندسی سیستم (PlantUML Diagrams)
+
+کدهای زیر را می‌توانید مستقیماً در [ادیتور آنلاین PlantUML](https://editor.plantuml.com/) قرار دهید و خروجی گرافیکی دریافت نمایید.
+
+---
+
+### ۱. نمودار معماری مؤلفه‌ها (Component Architecture Diagram)
+> **توضیح کوتاه:** این دیاگرام نحوه تفکیک لایه‌های کلاینت، سرور، پایگاه داده MySQL و لایه واسط کاربری وب (CEF) را همراه با مسیرهای ارتباطی شبکه (RPC و ElementData) نشان می‌دهد.
+
+```plantuml
+@startuml
+skinparam componentStyle uml2
+skinparam backgroundColor #FDFDFD
+skinparam roundCorner 10
+skinparam defaultFontName Tahoma
+
+package "کلاینت (MTA Client Layer)" {
+    [Client.lua] as CL
+    [رندر سه‌بعدی Dx Text] as DX
+    [رابط کاربری دیسپچ (CAD GUI)] as CAD
+    [Web/CEF View (index.html)] as CEF
+    CL --> DX
+    CL --> CAD
+    CL --> CEF
+}
+
+package "سرور (MTA Server Layer)" {
+    [Server.lua (Core Engine)] as SV
+    [مدیریت وضعیت المان‌ها (ElementData)] as ED
+    [تایمرها و صف‌های زمانی] as TM
+    SV --> ED
+    SV --> TM
+}
+
+database "MySQL Database (mta_db)" {
+    [medical_records]
+    [medic_stats]
+    [patient_stats]
+}
+
+CL <--> SV : triggerServerEvent / triggerClientEvent
+SV --> [medical_records] : dbExec (ثبت سابقه)
+SV --> [medic_stats] : dbExec (آمار نجات)
+SV --> [patient_stats] : dbExec (آمار بستری)
+@enduml
+```
+
+---
+
+### ۲. ماشین حالات چرخه حیات مصدوم (Patient State Machine)
+> **توضیح کوتاه:** تمام گذارهای وضعیت مصدوم از زمان آسیب‌دیدگی تا بازیابی سلامتی، شامل مسیر نرمال مداوا توسط پزشک و مسیر اضطراری انقضای زمان (Timeout).
+
+```plantuml
+@startuml
+skinparam state {
+    BackgroundColor LightCyan
+    BorderColor DarkSlateGray
+    ArrowColor Navy
+    StartColor Green
+    EndColor Red
+}
+skinparam defaultFontName Tahoma
+
+[*] --> Healthy : وضعیت عادی
+
+Healthy --> Knocked : onPlayerWasted (کاهش سلامت به صفر)
+state Knocked {
+    [*] --> LyingDown : اجرای انیمیشن KO + شروع تایمر ۱۸۰ ثانیه
+    LyingDown --> CarriedOnShoulder : فشرده شدن E توسط امدادگر
+    CarriedOnShoulder --> InsideAmbulance : فشرده شدن E پشت آمبولانس
+    InsideAmbulance --> TransferredToHospital : ورود خودرو به کادر آبی
+}
+
+Knocked --> WheelchairTreatment : اتمام تایمر ۱۸۰ ثانیه‌ای (احیای خودکار)
+TransferredToHospital --> WheelchairTreatment : تخلیه در کادر آبی
+
+state WheelchairTreatment {
+    [*] --> SittingOnChair : تغییر اسکین به ۲۵۲ + اتصال به آبجکت ویلچر
+    SittingOnChair --> Countdown15Sec : شمارش معکوس از ۱۵ تا ۰
+    Countdown15Sec --> StandUpAnim : انیمیشن getup_front
+}
+
+WheelchairTreatment --> Healthy : بازگشت اسکین اولیه + بازیابی ۱۰۰٪ خون + ترخیص
+Healthy --> [*]
+@enduml
+```
+
+---
+
+### ۳. نمودار توالی سناریوی کامل امداد (Rescue Scenario Sequence)
+> **توضیح کوتاه:** توالی زمانی ارسال ایونت‌ها بین بازیکن مصدوم، امدادگر، سرور و دیتابیس در طول فرایند اعلام خطر، اعزام، حمل و احیا.
+
+```plantuml
+@startuml
+autonumber
+skinparam defaultFontName Tahoma
+skinparam responseMessageBelowArrow true
+
+actor "مصدوم (Victim)" as V
+actor "امدادگر (Medic)" as M
+participant "کلاینت امدادگر" as MC
+participant "سرور مرکزی" as S
+database "پایگاه داده" as DB
+
+V -> S: رویداد onPlayerWasted
+S -> V: اسپاون در محل با خون ۱۰ + فریز + تایمر ۳ دقیقه‌ای
+M -> MC: فشردن کلید H (تبلت دیسپچ)
+MC -> S: درخواست اطلاعات مصدومان فعال
+MC -> M: نمایش لیست مصدومان
+M -> MC: انتخاب مصدوم و کلیک روی اعزام (Dispatch)
+MC -> S: server:dispatchToVictim
+S -> MC: فعال‌سازی GPS و آژیر آمبولانس
+M -> S: فشردن E در مجاورت مصدوم (سوار کردن بر دوش)
+M -> S: فشردن E پشت آمبولانس (تثبیت بیمار در خودرو)
+M -> S: ورود خودرو به کادر آبی بیمارستان (onMarkerHit)
+S -> S: استقرار بیمار روی ویلچر (تایمر ۱۵ ثانیه‌ای)
+S -> DB: ثبت رکورد درمان در medical_records و آپدیت آمار
+S -> V: پایان مداوا، بازگشت خون به ۱۰۰ و رفع فریز
+@enduml
+```
+
+---
+
+### ۴. نمودار فعالیت الگوریتم کلید تعاملی `E` (Intelligent Key Activity)
+> **توضیح کوتاه:** فلوچارت تصمیم‌گیری شرطی سرور هنگام فشرده‌شدن کلید تعاملی `E` جهت تشخیص حالت امدادگر (حمل، تخلیه یا قرار دادن در خودرو).
+
+```plantuml
+@startuml
+skinparam defaultFontName Tahoma
+start
+
+:امدادگر کلید E را فشار می‌دهد;
+
+if (آیا بازیکن در شیفت کاری است؟ (medicDuty)) then (خیر)
+    :ارسال هشدار "ابتدا duty/ بزنید";
+    stop
+else (بله)
+    if (آیا مصدومی روی دوش امدادگر هست؟) then (بله)
+        if (فاصله تا آمبولانس <= ۵ متر؟) then (بله)
+            :جدا کردن مصدوم از شانه امدادگر;
+            :سوار کردن مصدوم داخل کابین آمبولانس;
+            :روشن کردن آژیر و مقصدگذاری GPS روی بیمارستان;
+        else (خیر)
+            :پایین گذاشتن مصدوم روی زمین;
+            :اجرای مجدد انیمیشن درازکش برای مصدوم;
+        endif
+    else (خیر)
+        if (فاصله‌ای کمتر از ۳ متر تا یک مصدوم بیهوش وجود دارد؟) then (بله)
+            :غیرفعال کردن برخورد فیزیکی مصدوم;
+            :پیوند دادن مصدوم به دوش امدادگر (Attach);
+            :اجرای انیمیشن CARRY برای امدادگر;
+            :نمایش پیام هدایتگر "به پشت آمبولانس بروید";
+        else (خیر)
+            :عدم انجام عملیات;
+        endif
+    endif
+endif
+
+stop
+@enduml
+```
+
+---
+
+### ۵. نمودار موجودیت-ارتباط دیتابیس (ER Diagram)
+> **توضیح کوتاه:** ساختار جداول پایگاه داده رابطه MySQL، ستون‌ها، کلیدهای اصلی و روابط ضمنی بین سوابق پزشکی و آمار بازیکنان.
+
+```plantuml
+@startuml
+skinparam linetype ortho
+skinparam defaultFontName Tahoma
+
+entity "medical_records (سوابق درمان)" as MR {
+    * id : INT <<PK, AI>>
+    --
+    * player_name : VARCHAR(50)
+    medic_name : VARCHAR(50)
+    status : VARCHAR(20)
+    timestamp : TIMESTAMP
+}
+
+entity "medic_stats (آمار امدادگران)" as MS {
+    * medic_name : VARCHAR(50) <<PK>>
+    --
+    rescues_count : INT
+}
+
+entity "patient_stats (آمار بیماران)" as PS {
+    * patient_name : VARCHAR(50) <<PK>>
+    --
+    visits_count : INT
+}
+
+MR }o..|| MS : "ثبت کارکرد نجات"
+MR }o..|| PS : "ثبت دفعات بستری"
+@enduml
+```
+
+---
+
+### ۶. نمودار موارد کاربرد سیستم (Use Case Diagram)
+> **توضیح کوتاه:** تفکیک اختیارات، تعاملات و موارد کاربردی میان سه بازیگر: «امدادگر»، «مصدوم» و «نگهبان خودکار سرور».
+
+```plantuml
+@startuml
+left to right direction
+skinparam defaultFontName Tahoma
+
+actor "مصدوم (Victim)" as V
+actor "امدادگر (Medic)" as M
+actor "ناظر خودکار سرور (Server Watchdog)" as S
+
+rectangle "سامانه امداد و درمان (EMS System)" {
+    usecase "ورود به فاز بیهوشی (Knockout)" as UC1
+    usecase "مشاهده تایمر شمارش معکوس" as UC2
+    usecase "تغییر وضعیت شیفت (/duty)" as UC3
+    usecase "مدیریت کارتابل اعزام با تبلت (CAD)" as UC4
+    usecase "حمل و نقل بیمار (دوش / خودرو)" as UC5
+    usecase "کنترل چراغ‌گردان و آژیر" as UC6
+    usecase "تحویل به کادر آبی بیمارستان" as UC7
+    usecase "احیای اضطراری پس از انقضای تایمر" as UC8
+    usecase "ثبت گزارش در پایگاه داده" as UC9
+}
+
+V --> UC1
+V --> UC2
+
+M --> UC3
+M --> UC4
+M --> UC5
+M --> UC6
+M --> UC7
+
+UC7 ..> UC9 : <<include>>
+S --> UC8 : در صورت نبود امدادگر
+UC8 ..> UC9 : <<include>>
+@enduml
+```
+
+---
+
+### ۷. نمودار استقرار و تبادل شبکه (Deployment & Network Flow)
+> **توضیح کوتاه:** نقشه زیرساخت فیزیکی و مسیر همگام‌سازی بسته‌های شبکه MTA بین کلاینت امدادگر، کلاینت مصدوم، هسته سرور لینوکس/ویندوز و موتور MySQL.
+
+```plantuml
+@startuml
+skinparam defaultFontName Tahoma
+
+node "کلاینت امدادگر (Medic Machine)" {
+    artifact "GUI تبلت اعزام" as M_CAD
+    artifact "شنونده کلید E و K" as M_KEY
+    artifact "رندرر سه‌بعدی Dx" as M_DX
+}
+
+node "کلاینت مصدوم (Victim Machine)" {
+    artifact "تایمر هشدار و انیمیشن" as V_UI
+    artifact "حالت قفل کنترلی (Frozen)" as V_FZ
+}
+
+node "سرور بازی (MTA:SA Server)" {
+    component "هسته رویدادها (Server.lua)" as SV_CORE
+    component "حافظه هماهنگ داده‌ها (ElementData Sync)" as SV_DATA
+}
+
+database "سرویس دیتابیس (MySQL Server)" {
+    component "موتور InnoDB (Port 3306)" as DB_ENGINE
+}
+
+M_KEY --> SV_CORE : [RPC] server:interactKey
+M_CAD --> SV_CORE : [RPC] server:dispatchToVictim
+SV_CORE --> M_DX : [Sync] نمایش متن وضعیت و مسیر GPS
+SV_CORE --> V_UI : [ClientEvent] client:startKnockTimer
+SV_CORE --> V_FZ : [Sync] قفل حرکات و غیرفعال‌سازی برخوردهای فیزیکی
+SV_CORE --> SV_DATA : به‌روزرسانی وضعیت آمبولانس و ویلچر
+SV_CORE --> DB_ENGINE : کوئری‌های dbExec (ثبت سوابق و احیا)
+@enduml
+```
