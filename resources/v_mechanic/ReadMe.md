@@ -206,6 +206,7 @@ start v_mechanic
 ---
 
 ### ۱. معماری کلی و اجزای سیستم (Component Diagram)
+![1](image.png)
 این دیاگرام نحوه تفکیک و پیوند میان بخش‌های رابط کاربری تحت وب (CEF)، موتور کلاینت لوآ، لایه سرور و پایگاه داده MySQL را نمایش می‌دهد.
 
 ```plantuml
@@ -246,6 +247,7 @@ ServerLua <--> DB : dbExec & dbQuery (autoreconnect)
 ---
 
 ### ۲. توالی فرایند درخواست و ذخیره‌سازی داده (Sequence Diagram)
+![2](image-1.png)
 این چرخه نشان می‌دهد از لحظه زدن کلید `F4` توسط بازیکن تا اعتبارسنجی راننده، استعلام پایگاه داده، رندر روی صفحه و ذخیره نهایی چه سیگنال‌هایی میان سیستم‌ها ردوبدل می‌شود.
 
 ```plantuml
@@ -291,6 +293,7 @@ Server --> Player : نمایش پیام موفقیت‌آمیز در چت‌با
 ---
 
 ### ۳. فلوچارت تصمیم‌گیری و منطق عملکرد کاربر (Activity Flow Diagram)
+![3](image-2.png)
 جریان منطقی تعامل بازیکن از لحظه فشردن کلید تا خروج از پنل و انتخاب مودهای مختلف رانندگی.
 
 ```plantuml
@@ -346,6 +349,7 @@ endif
 ---
 
 ### ۴. نمودار حالت‌های خودرو و تیونینگ (State Machine Diagram)
+![4](image-3.png)
 وضعیت‌های مختلفی که فیزیک، پایداری و ظاهر خودرو در طول حیات خود در سرور تجربه می‌کند.
 
 ```plantuml
@@ -402,6 +406,7 @@ TunedVehicle --> StockVehicle : کلیک روی دکمه "فابریک کارخ�
 ---
 
 ### ۵. ساختار ارتباطی پایگاه داده (Entity Relationship Diagram - ERD)
+![5](image-4.png)
 طرح نگاشت داده‌ها میان جدول اصلی خودروهای سرور و پروفایل‌های ذخیره‌شده کاربران.
 
 ```plantuml
@@ -444,6 +449,7 @@ SV ||--o{ VHP : "می‌تواند از پروفایل‌های مشترک تغ�
 ---
 
 ### ۶. مدل کلاسی ساختار بسته‌های داده (Data Class Diagram)
+![6](image-5.png)
 نحوه چیدمان اشیاء در کلاینت جاوااسکریپت و انطباق آن با متغیرهای بومی Handling در زبان Lua.
 
 ```plantuml
@@ -505,6 +511,7 @@ TuningPackage *-- DynamicLightModel
 ---
 
 ### ۷. چرخه محاسباتی ۶۰ فریم بر ثانیه بدون افت پینگ (Client-Side Render Pipeline)
+![7](image-6.png)
 تفکیک دقیق وظایف همگام‌سازی سبک شبکه از چرخه فریم‌های گرافیکی (Zero Network Lag Logic).
 
 ```plantuml
@@ -512,39 +519,53 @@ TuningPackage *-- DynamicLightModel
 skinparam backgroundColor #0d121b
 skinparam defaultFontColor #ffffff
 skinparam ArrowColor #00e5ff
-skinparam partition {
+skinparam activity {
     BackgroundColor #121822
+    BorderColor #00e5ff
+    FontColor #ffffff
+    StartColor #00ff88
+    EndColor #ff4444
+}
+skinparam partition {
+    BackgroundColor #141c28
     BorderColor #00e5ff
     FontColor #00e5ff
 }
 
-partition "یک‌بار در صورت تغییر (Network Event Trigger)" {
-    (*) --> "تغییر حالت رقص نور در UI"
-    --> "ذخیره الگوریتم در ElementData (v_anim_color)"
-    --> "پخش به کلاینت‌های در محدوده استریم"
+start
+
+partition "رویداد شبکه (تنها یک‌بار هنگام تغییر)" {
+    :تغییر حالت در پنل کاربری CEF;
+    :ارسال به سرور و مقداردهی ElementData (v_anim_color);
+    :پخش خودکار دیتا به کلاینت‌های در محدوده دید;
 }
 
-partition "در هر فریم گرافیکی (Client-Side onClientRender - 60 FPS)" {
-    "پخش به کلاینت‌های در محدوده استریم" --> "دریافت تیک تایمر محلی (getTickCount)"
+partition "چرخه رندر کلاینت (onClientRender - بدون اشغال شبکه و پینگ)" {
+    :دریافت زمان جاری سیستم با getTickCount();
     
-    if (آیا الگو فعال است؟) then (بله)
-        if (الگو == 'rainbow') then (رنگین‌کمان)
-            :محاسبه زاویه رنگ با الگوریتم Hue (HSV to RGB);
-        else if (الگو == 'police') then (پلیسی استروب)
+    if (آیا الگوی رقص نور فعال است؟) then (بله)
+        if (نوع الگو چیست؟) then (رنگین‌کمان / rainbow)
+            :محاسبه چرخش رنگ با الگوریتم HSV to RGB;
+        elseif (پلیسی / police) then (پلیسی)
             :محاسبه فاز چشمک‌زن قرمز و آبی بر پایه میلی‌ثانیه;
-        else if (الگو == 'relax' یا 'fire') then (سینوسی)
-            :محاسبه شدت با تابع math.sin;
+        else (سایر / relax, fire, cyberpunk)
+            :محاسبه نوسان موج رنگ با تابع math.sin;
         endif
-        :اعمال مستقیم روی تایر/بدنه با setVehicleHeadLightColor;
+        :اعمال مستقیم روی چراغ و بدنه (setVehicleHeadLightColor);
+    else (خیر)
     endif
 
-    if (آیا دنده دستی فعال است؟) then (بله)
-        :محاسبه بردار سرعت (vx^2 + vy^2 + vz^2)^0.5;
-        if (سرعت واقعی > سقف مجاز دنده انتخابی) then (بله)
-            :اعمال ترمز خودکار با setElementVelocity;
+    if (آیا حالت دنده دستی فعال است؟) then (بله)
+        :محاسبه بردار سرعت فیزیکی خودرو (vx, vy, vz);
+        if (سرعت واقعی > سقف مجاز دنده فعلی؟) then (بله)
+            :مهار ازدیاد شتاب با ترمز نرم (setElementVelocity);
+        else (خیر)
         endif
-        :ترسیم داشبورد دنده (HUD) با توابع dxDraw;
+        :ترسیم هاد گرافیکی دنده روی نمایشگر (dxDraw);
+    else (خیر)
     endif
 }
+
+stop
 @enduml
 ```
