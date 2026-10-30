@@ -8,6 +8,7 @@
 پکیج کامل خودروها را از مرجع زیر دانلود کنید:
 
 👉 **[صفحه دانلود پکیج خودروهای ایرانی (GTA5ModSkin)](https://gta5modskin.rozblog.com/post/32)**
+https://rozup.ir/view/4263750/%DB%B2%DB%B0%DB%B2%DB%B6%DB%B0%DB%B6%DB%B1%DB%B6_%DB%B0%DB%B2%DB%B5%DB%B1%DB%B3%DB%B3.jpg
 
 ---
 
