@@ -1,369 +1,559 @@
-# 🚗 سیستم هوشمند مدیریت ناوگان نقلیه (Admin Vehicles System)
+سند جامع فنی و مهندسی سیستم مدیریت وسایل نقلیه دائمی (Admin Vehicle Management System)
 
-<div align="center">
+راهنمای کاربردی و مفهوم کلی برای عموم (High-Level Overview)
 
-![MTA Version](https://img.shields.io/badge/MTA%3ASA-1.6%2B-blue?style=for-the-badge&logo=cplusplus)
-![Architecture](https://img.shields.io/badge/Architecture-CEF%20%7C%20Lua%20%7C%20MySQL-00ffcc?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-success?style=for-the-badge)
-![License](https://img.shields.io/badge/Project-SilentRP-orange?style=for-the-badge)
+این سیستم یک جعبه‌ابزار هوشمند و همه‌کاره برای مدیران سرورهای بازی آنلاین MTA:SA
+(Multi Theft Auto: San Andreas) است. در سرورهای بازی آنلاین سنتی، هنگامی که
+مدیری ماشینی را در بازی ظاهر (اسپاون) می‌کند، با خروج بازیکن یا ری‌استارت شدن
+سرور، آن خودرو ناپدید می‌شود؛ یا در حالتی بدتر، اگر دو خودرو روی یک نقطه ظاهر
+شوند، موتور فیزیک بازی دچار باگ شده و هر دو خودرو فوراً منفجر می‌شوند!
 
-<p align="center">
-  <b>ماژول مهندسی‌شده برای استقرار، ثبت پایدار و کنترل بلادرنگ وسایل نقلیه سازمانی و دائم با تکنولوژی پیشرفته CEF</b>
-</p>
+این ریسورس تمام این مشکلات را برای همیشه حل کرده است:
 
-</div>
+1.  رابط کاربری شیشه‌ای و مدرن (CEF Web Panel): مدیران با فشردن کلید F6 یک پنجره
+    وب شیک، فارسی و بدون لگ باز می‌کنند و تمام ماشین‌های سرور را مانند یک پنل وب
+    با جزئیات کامل می‌بینند.
+2.  پارک و ذخیره ابدی در پایگاه داده (MySQL Persistence): ادمین می‌تواند سوار هر
+    ماشینی شود، آن را در پارکینگ یا جلوی یک اداره قرار دهد و دکمه «ثبت موقعیت»
+    را بزند؛ ماشین فوراً در دیتابیس ثبت شده و حتی پس از خاموش و روشن شدن سرور،
+    سر جای دقیق خود باقی می‌ماند.
+3.  مکانیزم ضد انفجار و ضد اسپاون تکراری (Anti-Detonation Engine): سیستم پیش از
+    اسپاون هر ماشین بررسی می‌کند که آیا خودرویی با این شناسه یا در فاصله ۲ متری
+    آن نقطه وجود دارد یا خیر. اگر ماشینی بود، به جای ساخت دوباره، همان ماشین
+    موجود را احیا و همگام می‌کند تا از پرتاب شدن و انفجار خودروها جلوگیری شود.
+4.  ابزارهای ناوبری زنده: امکان تله‌پورت فوری به سمت ماشین، ریست کردن مکان ماشین
+    به جای پارک اولیه، حذف کامل از بازی و دیتابیس، و قرار دادن فلش نئونی متحرک و
+    مارکر روی نقشه جهت ردیابی موقعیت مکانی.
 
----
+Platform: MTA:SA Engine: Lua 5.1 UI: CEF / HTML5 Database: MySQL / MariaDB
+Security: Dual-Tier Validation Code Architecture: Event--Driven
 
-## 📌 فهرست مطالب
-- [🎯 هدف توسعه و خواست سازنده (Executive Summary)](#-هدف-توسعه-و-خواست-سازنده-executive-summary)
-- [📂 ساختار و وظیفه فایل‌ها](#-ساختار-و-وظیفه-فایلها)
-- [📊 دیاگرام‌های هفت‌گانه مهندسی نرم‌افزار (همراه با رندر و لینک مستقیم)](#-دیاگرامهای-هفتگانه-مهندسی-نرم‌افزار)
-  - [۱. توالی درخواست و رندر پنل (Sequence)](#۱-دیاگرام-توالی-باز-کردن-پنل-و-دریافت-دادهها-sequence-diagram)
-  - [۲. مدل داده پایگاه داده (ERD)](#۲-دیاگرام-پایگاه-داده-erd---crows-foot)
-  - [۳. ماشین وضعیت خودرو (State Machine)](#۳-دیاگرام-ماشین-وضعیت-چرخه-حیات-خودرو-state-machine)
-  - [۴. کامپوننت و معماری سیستم (Component)](#۴-دیاگرام-مؤلفه-و-معماری-سیستم-component-diagram)
-  - [۵. چرخه ضد ترکیدن ماشین (Activity - Anti-Stacking)](#۵-دیاگرام-جریان-منطقی-موتور-ضد-انفجار-activity-diagram)
-  - [۶. نمودار موارد کاربرد (Use Case)](#۶-دیاگرام-موارد-کاربرد-use-case-diagram)
-  - [۷. استقرار فیزیکی و شبکه (Deployment)](#۷-دیاگرام-استقرار-deployment-diagram)
-- [🛡️ ارزیابی امنیتی، فنی و تجربیات به دست آمده](#️-ارزیابی-امنیتی-فنی-و-تجربیات-به-دست-آمده)
-- [🚀 راهنمای نصب و راه‌اندازی](#-راهنمای-نصب-و-راه‌اندازی)
+۱. خلاصه مدیریتی و اهداف طراحی (Executive Summary)
 
----
+۱.۱. بیان مسئله (Problem Statement)
 
-## 🎯 هدف توسعه و خواست سازنده (Executive Summary)
+در معماری کلاینت-سرور پلتفرم Multi Theft Auto (بر پایه موتور فیزیک GTA: San
+Andreas)، ماهیت موجودیت‌های محیطی (Elements) به صورت پیش‌فرض فرّار (Volatile) و
+وابسته به حافظه رم سرور است. مدیریت موجودیت‌های حیاتی نظیر خودروهای سازمانی
+(پلیس، امداد، حمل‌ونقل شهری) با سه چالش بنیادین مواجه بوده است:
 
-در سرورهای **Roleplay** پلتفرم GTA:MTA، وسایل نقلیه عمومی، فکشن‌ها (پلیس، بیمارستان، آتش‌نشانی، تاکسی، مشاغل شهری) نیاز به ماندگاری دارند. پیش از توسعه این ریسورس، فرآیند ثبت و جابه‌جایی خودروها با معضلات بزرگی روبرو بود:
+  - تداخل اسپاون و انفجار فیزیکی (Physics Collision Detonation): ساخت دو شیء در
+    یک حجم فضایی مشترک منجر به انفجار ناشی از برخورد شدید و خطای محاسباتی موتور
+    فیزیک صلب (Rigid-body) می‌شود.
+  - ناپایداری در چرخه بازنشانی (State Loss on Reboot): نبود چرخه ثبت دائم مختصات
+    برداری موقعیت (X, Y, Z) و دوران فضایی (R_x, R_y, R_z).
+  - ناکارآمدی رابط‌های کاربری سنتی (Legacy GUI Inefficiency): واسط‌های قدیمی بر
+    پایه توابع رندرینگ DX درون‌بازی، فاقد پاسخگویی بصری، واکنش‌گرایی، صفحه‌بندی
+    داده‌ها و فیلترینگ بدون افت فریم (Frame Drop) هستند.
 
-1. **حذف رابط‌های خسته‌کننده متنی و قدیمی GUI:** جایگزینی با پنل مدرن تحت وب (Chromium Embedded Framework) با طراحی اختصاصی Glassmorphism نئونی.
-2. **ثبت مختصات با یک کلیک (Live Park Synchronization):** ادمین تنها کافیست سوار ماشین شود و دکمه را بزند؛ تمام مقادیر برداری $X, Y, Z, RX, RY, RZ$ بدون نیاز به وارد کردن دستی در دیتابیس سینک می‌شوند.
-3. **ریشه‌کن کردن باگ انفجار و استک شدن (Vehicle Stacking & Collision Glitch):** در زمان استارت یا ری‌استارت ریسورس، اگر ماشینی در آن مختصات زنده باشد، شیء تکراری نمی‌سازد تا از کوبیده شدن فیزیکی دو شیء و انفجار جلوگیری شود.
-4. **ابزارهای پشتیبانی بلادرنگ ادمین:** قابلیت قرار دادن فلش نئونی سقف و Blip نقشه برای پیدا کردن خودرو، تلپورت فوری و ریست مکان فیزیکی به پارکینگ اولیه.
+۱.۲. راهکار مهندسی (Engineered Solution)
 
----
+این زیرسیستم یک راه‌حل تمام‌پشته (Full-Stack) برای حل تعارض فیزیک، همگام‌سازی
+وضعیت پایگاه‌داده با حافظه زنده سرور و ارائه رابط کاربری فوق‌العاده سریع از طریق
+مرورگر توکار کرومیوم (CEF) است. معماری سامانه بر مبنای الگوی جداسازی پردازش
+ناهمگام (Non-blocking Asynchronous I/O) و گذرگاه پیام‌رسانی رویدادمحور
+(Event-Driven IPC) پیاده‌سازی شده است تا بار پردازشی سرور را روی حلقه اصلی
+پردازش (Main Tick Loop) به صفر نزدیک کند.
 
-## 📂 ساختار و وظیفه فایل‌ها
+۲. کالبدشکافی فنی فایل‌ها و نقش لایه‌ها (Technical File Architecture)
 
-| نام فایل | لایه معماری | شرح وظایف مهندسی |
-| :--- | :---: | :--- |
-| **`meta.xml`** | مانیفست و پیکربندی | معرفی ریسورس به هسته MTA، تنظیم دسترسی کلاینت و سرور و ارائه دسترسی لوکال به آدرس `http://mta/local/ui/index.html`. |
-| **`server.lua`** | منطق سرور و دیتابیس | مدیریت اتصال به MySQL، بارگذاری خودروها با الگوریتم ضد انفجار، کوئری‌های CRUD، کنترل رنک ادمین، ساخت مارکر و جابجایی عناصر. |
-| **`client.lua`** | پل ارتباطی (Bridge) | کنترل پنجره مرورگر CEF، شنود کلید `F6` و کامند `/vehpanel`، هدایت جریان داده‌های دیتابیس به جاوااسکریپت از طریق JSON. |
-| **`ui/index.html`** | رابط کاربری گرافیکی | طراحی شده با CSS مدرن، حاوی کاتالوگ اسپاون سریع ۲۸ مدل خودرو به همراه نام فارسی، جدول مدیریت خودروهای ثبت‌شده و دکمه‌های عملیاتی. |
+resources/admin_vehicles/
+├── meta.xml                  # توصیف‌گر ماژول، تعریف سطح دسترسی، بارگذاری فایل‌ها و اسکریپت‌ها
+├── client.lua                # پل ارتباطی CEF به موتور سرور، کنترل رندرینگ، مدیریت رویدادهای کاربر
+├── server.lua                # موتور منطقی بک‌اند، پردازشگر تراکنش‌های پایگاه داده، احراز هویت و اسپاونر
+└── ui/
+    └── index.html            # رابط کاربری کلاینت مبتنی بر وب (HTML5/CSS3/ES6 Modern Glassmorphic Dashboard)
 
----
+۲.۱. توصیف‌گر مانیفست (meta.xml)
 
-## 📊 دیاگرام‌های هفت‌گانه مهندسی نرم‌افزار
+تعیین‌کننده سیاست‌های دسترسی و کامپایل منابع. این فایل نقطه ورودی برای ماشین
+مجازی کلاینت و سرور بوده و فایل‌های ایستای وب را جهت کش محلی کلاینت تعریف
+می‌کند.
 
-> **نکته:** برای مشاهده یا ویرایش زنده هر دیاگرام روی لینک **«🌐 باز کردن و ویرایش زنده در PlantUML Editor»** کلیک کنید.
+۲.۲. لایه واسط تعاملی وب (ui/index.html)
 
----
+پیاده‌سازی شده بر پایه استانداردهای مدرن فرانت‌اند، بدون وابستگی به فریم‌ورک‌های
+حجیم خارجی جهت کمینه‌سازی بار رندرینگ حافظه:
 
-### ۱. دیاگرام توالی باز کردن پنل و دریافت داده‌ها (Sequence Diagram)
-*زاویه دید: جریان کنترل و فراخوانی توابع ناهمگام (Async) بین کلاینت، سرور، وب و دیتابیس.*
+  - پشته فناوری: HTML5 سمانتیک، CSS3 Flexbox/CSS-Grid پیشرفته با افکت
+    backdrop-filter: blur().
+  - مکانیسم IPC مرورگر: تعامل دوسویه با محیط بازی از طریق آبجکت بومی تزریق‌شده
+    window.mta.
+  - مدیریت وضعیت لوکال (Local State): کنترل آرایه‌های ساختاری خودروها، تفکیک
+    حالت سوار/پیاده، نگاشت شناسه‌های عددی (Model IDs) به اسامی بومی با کمترین
+    پیچیدگی زمانی \mathcal{O}(1).
 
-[![Sequence Diagram](https://www.plantuml.com/plantuml/svg/TO_D2i8m48NtVOe1-W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/TO_D2i8m48NtVOe1-W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
+۲.۳. لایه کلاینت لوآ (client.lua)
 
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/TO_D2i8m48NtVOe1-W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
+این لایه به عنوان یک لایه واسط (Broker / Adapter Layer) میان DOM مرورگر کرومیوم
+و شبکه بازی عمل می‌کند:
 
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
+  - تخصیص پویا: نمونه‌سازی تنبل (Lazy Instantiation) کنترلر مرورگر با تابع
+    guiCreateBrowser به منظور جلوگیری از مصرف رم قبل از درخواست ادمین.
+  - پل ارتباطی داده‌ای: ترجمه پکت‌های سرور به قالب آرایه‌های استاندارد جاوا
+    اسکریپت از طریق متد اختصاصی toJSON و فراخوانی آنی executeBrowserJavascript.
+  - مدیریت ورودی‌ها: کنترل تمرکز ماوس و کلیدهای میانبر نظیر F6 و کامند اختصاصی
+    /vehpanel.
 
-```plantuml
+۲.۴. لایه سرور لوآ (server.lua)
+
+هسته پردازشی و مدیر پایگاه داده:
+
+  - ارتباط با دیتابیس: برقراری کانکشن پول پایدار با درایور درونی dbConnect روی
+    پروتکل MySQL با انکودینگ کامل utf8mb4.
+  - مدیریت حافظه کش محلی (In-Memory Lookup): دیکشنری‌های لوکال spawnedVehicles،
+    adminMarkers و adminBlips جهت پیشگیری از فراخوانی کوئری‌های پرهزینه دیتابیس
+    و بهینه‌سازی دسترسی در زمان \mathcal{O}(1).
+  - سازمان‌دهنده احراز هویت: پایش ترکیبی سطوح دسترسی شامل گروه مدیران سیستم
+    داخلی (MTA ACL) و فیلد پایگاه داده متمرکز accounts.admin_level.
+
+۳. چرخه حیات و منطق‌های الگوریتمی حیاتی (Algorithmic Logic)
+
+        موقعیت مورد نظر اسپاون (X, Y, Z)
+                     │
+                     ▼
+          آیا شناسه دیتابیس قبلاً
+         در حافظه رم ثبت شده است؟
+                /          \
+            (بله)          (خیر)
+              /              \
+    بازیابی رفرنس شیء       آیا عنصری در شعاع
+    از جدول هش محلی          r < 2.0m قرار دارد؟
+                             /           \
+                         (بله)           (خیر)
+                           /               \
+         تطبیق شیء موجود به عنوان     ساخت عنصر فیزیکی جدید
+         خودروی دیتابیس بدون ساخت مجدد    با متغیر ارتفاع Z + 0.15m
+                           \               /
+                            \             /
+                             ▼           ▼
+                         همگام‌سازی فراداده‌ها
+                     (ElementData Sync & Respawn Set)
+
+۳.۱. مسئله انفجار دوقلوها و الگوریتم حل تعارض فضایی (Anti-Explosion Logic)
+
+در موتور بازی، بارگذاری کورکورانه سوابق پایگاه داده در صورت ری‌استارت ریسورس
+موجب می‌شود وسایل نقلیه‌ای که پیش‌تر توسط کلاینت رندر شده‌اند، مجدداً در همان
+مختصات تکرار شوند. برخورد همپوشان مش‌های سه‌بعدی برخورد فیزیکی (Collision Boxes)
+موجب آزاد شدن ناگهانی انرژی الاستیک توسط موتور Havok/RenderWare و در نتیجه پرتاب
+و انفجار قطعی وسیله می‌گردد.
+
+الگوریتم حل تعارض در متد loadAllVehicles:
+
+1.  بررسی شناسه یکتای داده‌ای: پیمایش تمامی وسایل نقلیه سطح سرور
+    (getElementsByType("vehicle")) و مقایسه متادیتای dbid با سوابق جدول
+    server_vehicles.
+2.  پایش همسایگی مجاورتی (Proximity Check): محاسبه فاصله اقلیدسی فضایی:
+    D = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2 + (z_2 - z_1)^2}
+3.  در صورتی که D < 2.0\text{m} باشد، شیء موجود به عنوان بازنمایی فیزیکی همان
+    سطر دیتابیس شناخته می‌شود و از فراخوانی متد createVehicle ممانعت به عمل
+    می‌آید.
+4.  تراز ارتفاعی ایمن (Z-Axis Elevation Cushion): اعمال ضریب +0.15\text{m} یا
+    +0.5\text{m} در هنگام بارگذاری جهت خنثی‌سازی فرورفتگی تایرها در مش‌های
+    نامنظم زمین سرور.
+
+۳.۲. فرآیند ذخیره‌سازی و تثبیت در لحظه (Instant Position Committing)
+
+با اجرای /park یا کلیک روی رابط کاربری وب، وضعیت شیء به‌صورت اتمیک ارزیابی
+می‌شود:
+
+  - در صورتی که خودرو پیش‌تر ثبت شده باشد (dbid != nil): یک کوئری UPDATE مختصات
+    جدید را روی شناسه موجود می‌نشاند.
+  - در صورتی که خودرو یک نمونه موقت باشد (dbid == nil): تراکنش INSERT ایجاد شده،
+    شناسه انتسابی (insertId) به عنوان متادیتای هویتی به عنصر بازی پیوست می‌شود و
+    خودرو بلافاصله به وضعیت «دائمی» ارتقا می‌یابد.
+
+۴. مدل داده و تعامل با پایگاه داده (Data Model & Schema)
+
+۴.۱. اسکیما DDL پایگاه داده
+
+CREATE TABLE IF NOT EXISTS `server_vehicles` (
+    `id` INT UNSIGNED AUTO_INCREMENT,
+    `model` SMALLINT UNSIGNED NOT NULL,
+    `x` FLOAT(10, 4) NOT NULL,
+    `y` FLOAT(10, 4) NOT NULL,
+    `z` FLOAT(10, 4) NOT NULL,
+    `rx` FLOAT(10, 4) NOT NULL DEFAULT 0.0000,
+    `ry` FLOAT(10, 4) NOT NULL DEFAULT 0.0000,
+    `rz` FLOAT(10, 4) NOT NULL DEFAULT 0.0000,
+    `plate` VARCHAR(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'IRAN',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_model` (`model`),
+    INDEX `idx_spatial` (`x`, `y`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+۴.۲. ملاحظات بهینه‌سازی و معماری I/O
+
+  - موتور ذخیره‌سازی InnoDB: استفاده از قفل‌گذاری سطحی (Row-level Locking) جهت
+    ممانعت از ایجاد گلوگاه روی عملیات همزمان خواندن/نوشتن.
+  - عملیات ناهمگام (Non-blocking Asynchronous Queries): استفاده از متدهای
+    dbQuery و dbExec توکار سرور که در رشته‌های پردازشی مجزا (Worker Threads)
+    اجرا شده و با مکانیزم Callback نتایج را پس از آزادسازی به Thread اصلی سرور
+    تحویل می‌دهند تا تیک‌ریت (Tick-rate) سرور همواره روی حداکثر مقدار ثابت
+    بماند.
+
+۵. ماتریس امنیت، سطوح مجوز و اعتبارسنجی شبکه (Security Architecture)
+
+۵.۱. مدل تهدید پکت‌های دستکاری‌شده (Remote Packet Tampering)
+
+کلاینت دستکاری‌شده (Hacked Client) با دسترسی مستقیم به کنسول اجرای اسکریپت یا
+حافظه می‌تواند بدون باز کردن پنل گرافیکی، اقدام به انتشار رویدادهای سرور نظیر
+onAdminDeleteVehicle یا onAdminCreatePermanentVehicle با آرگومان‌های مخرب کند.
+
+۵.۲. سیاست‌های دفاع در عمق (Defense-in-Depth Mechanisms)
+
+| تهدید امنیتی                                   | روش اعتبارسنجی در کالبد کدهای ارائه‌شده                                                                 | وضعیت محافظت   |
+| :--------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :------------: |
+| **جعل مبدأ درخواست (Origin Spoofing)**         | ارزیابی شناسه کلاینت با متغیر حفاظت‌شده سرور: `local player = client` (عدم اعتماد به پارامترهای کلاینت) | پیاده‌سازی شده |
+| **تزریق ریموت بدون دسترسی (Unauthorized RPC)** | سنجش اجباری `getAdminLevel(player) < 0` در تمام توابع مقصد رویدادها                                     | پیاده‌سازی شده |
+| **ارتقای دسترسی محلی (Client Data Tampering)** | تأیید هویت مجدد سمت سرور بر مبنای جدول `accounts` و اعتبارسنجی با `isObjectInACLGroup`                  | پیاده‌سازی شده |
+| **تزریق SQL (SQL Injection)**                  | استفاده انحصاری از Prepared Statements با پارامترهای جایگزین (`?`) در تمام دستورات                      | پیاده‌سازی شده |
+| **سرریز نوع داده (Type Mismatch/Overflow)**    | تبدیل و اعتبارسنجی اجباری تمام شناسه‌های ورودی از طریق `tonumber()` پیش از مصرف                         | پیاده‌سازی شده |
+
+۶. تجربیات توسعه، چالش‌های فنی و نقشه راه توسعه‌پذیری (Engineering Roadmap)
+
+۶.۱. چالش‌های فنی شناسایی‌شده در کد فعلی
+
+1.  پیچیدگی زمانی پیمایش عناصر در هنگام بارگذاری: تابع loadAllVehicles در هر
+    تکرار حلقه خودروهای ثبت‌شده، کل عناصر بازی را با
+    getElementsByType("vehicle") جستجو می‌کند. این منطق دارای پیچیدگی
+    \mathcal{O}(M \times N) است که در صورت بالا رفتن تعداد عناصر سرور به بیش از
+    ۱۰۰۰، موجب تاخیر در لود اولیه می‌شود.
+2.  پایش فاصله تک‌نقطه‌ای: پایش مجاورت فقط در ۲ متر ابتدایی بررسی می‌شود، در
+    حالی که خودروهای طویل نظیر تریلرها و اتوبوس‌ها (DFT-30، Linerunner) به شعاع
+    خطای بیشتری بر پایه هیت‌باکس (Bounding Sphere) نیاز دارند.
+
+۶.۲. نقشه راه فازهای آتی (Extensibility Roadmap)
+
+- [ ] فاز اول (Refactoring): بازنویسی نگاشت خودروهای حافظه از پیمایش خطی به
+  ساختار داده Spatial Hash Grid / Quadtree برای کاهش مرتبه به \mathcal{O}(1).
+- [ ] فاز دوم (Extended Attributes): افزودن ذخیره‌سازی رنگ‌های RGB بدنه،
+  ارتقاهای تیونینگ (Modifications / Upgrades)، میزان سلامت موتور (health) و
+  آسیب‌های بدنه به ستون JSON درون دیتابیس.
+- [ ] فاز سوم (Audit Logging System): ایجاد جدول لاگ تراکنش‌های اداری
+  (admin_vehicle_logs) با جزئیات دقیق فعالیت‌ها، شناسه ادمین، زمان وقوع و آدرس
+  IP جهت مقاصد ردیابی و امنیت.
+
+۷. مستندات مهندسی بصری بر پایه PlantUML
+
+دیاگرام ۱: معماری کلی و تبادل پیام چندلایه‌ای (Component/Architecture Diagram)
+
+این دیاگرام تفکیک لایه‌های معماری نرم‌افزار، رابط‌های مرزی میان وب، هسته محلی
+سیستم و پایگاه داده، و الگوی فراخوانی ناهمگام را تشریح می‌کند.
+
 @startuml
+!theme plain
+skinparam componentStyle uml2
+skinparam backgroundColor #FAFAFA
+skinparam ArrowColor #0284C7
+skinparam InterfaceBorderColor #0369A1
+
+package "Client Environment (Sandboxed)" {
+    [Chromium Embedded Framework (CEF)] as CEF <<UI Layer>> #E0F2FE
+    interface "mta.triggerEvent()" as JS_Bridge
+    [Client Lua Controller] as ClientLua <<Broker Layer>> #BAE6FD
+    
+    CEF -right-> JS_Bridge
+    JS_Bridge -right-> ClientLua : Dispatches DOM Events
+    ClientLua ..> CEF : executeBrowserJavascript()
+}
+
+cloud "MTA Networking Layer" {
+    interface "triggerServerEvent" as TSE
+    interface "triggerClientEvent" as TCE
+}
+
+ClientLua --> TSE : Secure Serialized Packets
+TCE --> ClientLua : Push Entity Snapshot
+
+package "Server Environment (Host Dedicated)" {
+    [Event Dispatcher & ACL Sentinel] as Sentinel <<Security>> #FEE2E2
+    [Vehicle Engine Controller] as CoreEngine <<Domain Logic>> #FEF08A
+    [Local Memory Hash Maps] as MemCache <<RAM Layer>> #DCFCE7
+    
+    TSE --> Sentinel : Intercepts Remote Calls
+    Sentinel --> CoreEngine : Validates client auth
+    CoreEngine <-> MemCache : O(1) Cache Lookup
+}
+
+database "Persistent Storage" {
+    [MySQL Database] as DB <<InnoDB Engine>> #F3E8FF
+    interface "MTA Asynchronous DB API" as DB_API
+}
+
+CoreEngine --> DB_API : dbQuery / dbExec
+DB_API --> DB : Non-blocking Thread Pool
+DB --> DB_API : Returns Query Handler Result
+DB_API --> CoreEngine : Callback with Hydrated Rows
+TCE <-- CoreEngine : Broadcasts Reconciled State
+@enduml
+
+دیاگرام ۲: توالی همگام‌سازی و بارگذاری داده از دیتابیس به رابط وب (Sequence Diagram - Data Sync)
+
+این سناریو نمایش‌دهنده توالی کامل واکشی اطلاعات از لحظه بازگشایی رابط گرافیکی تا
+رندر داده‌ها روی جدول HTML5 است.
+
+@startuml
+!theme plain
 autonumber
-actor Admin as "مدیر (Admin)"
-participant ClientLua as "Client (client.lua)"
-participant CEF as "CEF Browser (index.html)"
-participant ServerLua as "Server (server.lua)"
-database MySQL as "MySQL Database"
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
 
-Admin -> ClientLua: فشردن F6 یا تایپ /vehpanel
-ClientLua -> ClientLua: ارزیابی شرط admin_level >= 0
-ClientLua -> CEF: guiCreateBrowser & بارگذاری ui/index.html
-CEF -> ClientLua: رویداد onWebReady (بارگذاری DOM)
-ClientLua -> ServerLua: triggerServerEvent("requestSavedVehiclesList")
-ServerLua -> ServerLua: بررسی مجدد دسترسی کلاینت در سرور
-ServerLua -> MySQL: SELECT * FROM server_vehicles ORDER BY id DESC
-MySQL --> ServerLua: بازگردانی لیست ماشین‌ها
-ServerLua -> ClientLua: triggerClientEvent("receiveSavedVehiclesList", list, currentCar)
-ClientLua -> CEF: executeBrowserJavascript("updatePanelData(...)")
-CEF --> Admin: رندر کامل جدول و دکمه‌های کنترلی
+actor "Admin (Client)" as Admin
+boundary "CEF Web UI" as UI
+control "Client Lua" as CL
+control "Server Engine" as SE
+database "MySQL Server" as DB
+
+Admin -> CL: کلید F6 یا دستور /vehpanel
+activate CL
+CL -> UI: ایجاد یا نمایش پنجره وب
+activate UI
+UI -> CL: رویداد "onWebReady"
+deactivate UI
+CL -> SE: triggerServerEvent("requestSavedVehiclesList", resourceRoot)
+activate SE
+SE -> SE: ارزیابی سطح دسترسی (Admin Level Check)
+alt مجوز نامعتبر است (admin_level < 0)
+    SE --> CL: عدم پاسخ یا پیام خطای عدم دسترسی
+else احراز هویت موفق
+    SE -> DB: dbQuery("SELECT * FROM server_vehicles ORDER BY id DESC")
+    activate DB
+    DB --> SE: برگرداندن سطرهای رکوردهای ذخیره شده
+    deactivate DB
+    SE -> SE: پایش انطباق وسایل نقلیه موجود در RAM
+    SE -> SE: سنجش خودروی فعلی ادمین (Occupied Vehicle)
+    SE -> CL: triggerClientEvent("receiveSavedVehiclesList", list, currentCar)
+    deactivate SE
+    CL -> UI: executeBrowserJavascript("updatePanelData(...)")
+    activate UI
+    UI -> UI: پارس JSON و رندر ساختار DOM جدول خودروها
+    UI --> Admin: نمایش داده‌های زنده و دکمه‌های عملیاتی
+    deactivate UI
+end
+deactivate CL
 @enduml
-```
-</details>
 
----
+دیاگرام ۳: فلوچارت الگوریتم پیشگیری از اسپاون تکراری و تداخل فیزیک (Activity Diagram)
 
-### ۲. دیاگرام پایگاه داده (ERD - Crow's Foot)
-*زاویه دید: ساختار فیزیکی جداول، انواع فیلدها و ارتباطات پایگاه داده.*
+تشریح الگوریتم تعیین وضعیت اسپاون ایمن جهت ممانعت قطعی از انفجار دوقلوهای فیزیکی
+در هسته بازی.
 
-[![ERD Diagram](https://www.plantuml.com/plantuml/svg/UD3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/UD3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/UD3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
-
-```plantuml
 @startuml
-skinparam linetype ortho
-
-entity "accounts" as accounts {
-  * id : INT <<PK, AUTO_INCREMENT>>
-  --
-  * username : VARCHAR(64) <<UNIQUE>>
-  admin_level : INT <<DEFAULT -1>>
-}
-
-entity "server_vehicles" as sv {
-  * id : INT <<PK, AUTO_INCREMENT>>
-  --
-  * model : INT
-  * x : FLOAT
-  * y : FLOAT
-  * z : FLOAT
-  * rx : FLOAT
-  * ry : FLOAT
-  * rz : FLOAT
-  plate : VARCHAR(32) <<DEFAULT 'IRAN'>>
-  created_at : TIMESTAMP <<DEFAULT CURRENT_TIMESTAMP>>
-  updated_at : TIMESTAMP <<ON UPDATE CURRENT_TIMESTAMP>>
-}
-
-accounts ||..o{ sv : "مدیریت و ثبت فیزیکی"
-@enduml
-```
-</details>
-
----
-
-### ۳. دیاگرام ماشین وضعیت چرخه حیات خودرو (State Machine)
-*زاویه دید: انتقال وضعیت المان خودرو از ساخت، جابه‌جایی، پارک تا حذف دائمی.*
-
-[![State Machine](https://www.plantuml.com/plantuml/svg/TP3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/TP3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/TP3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
-
-```plantuml
-@startuml
-[*] --> Temporary : ادمین دکمه اسپاون را می‌زند (تب ۲)
-
-state Temporary {
-  [*] --> NonPersistent
-  NonPersistent : فاقد dbid در حافظه
-  NonPersistent : پاک‌شدن در صورت ری‌استارت سرور
-}
-
-Temporary --> Persistent : سوار شدن + فشردن دکمه ثبت پارک
-state Persistent {
-  [*] --> Parked
-  Parked --> Driving : سوار شدن و جابجا کردن
-  Driving --> Parked : فشردن مجدد دکمه ثبت پارک (UPDATE Coords)
-  Driving --> Parked : ریست پوزیشن / مرگ خودرو (Respawn)
-}
-
-Persistent --> Destroyed : کلیک دکمه حذف (Delete)
-Destroyed --> [*] : حذف ردیف از دیتابیس + destroyElement
-@enduml
-```
-</details>
-
----
-
-### ۴. دیاگرام مؤلفه و معماری سیستم (Component Diagram)
-*زاویه دید: تفکیک ماژول‌ها و نحوه جریان داده‌ها بین کلاینت، سرور و لایه ذخیره‌سازی.*
-
-[![Component Diagram](https://www.plantuml.com/plantuml/svg/TL1D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/TL1D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/TL1D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
-
-```plantuml
-@startuml
-package "Client Subsystem (MTA Client Engine)" {
-  [Input Handler (F6/Command)] --> [client.lua Bridge]
-  package "CEF Web Environment" {
-    [index.html / Neon CSS] <-> [JS Logic: updatePanelData]
-  }
-  [client.lua Bridge] <..> [JS Logic: updatePanelData] : executeBrowserJavascript / triggerEvent
-}
-
-package "Server Subsystem (MTA Host)" {
-  [client.lua Bridge] <--> [server.lua Backend] : Latent Network Events (RPC)
-  
-  package "Core Logics" {
-    [Anti-Stacking Engine] - [server.lua Backend]
-    [Entity Tracker (Marker/Blip)] - [server.lua Backend]
-    [Access Control Layer] - [server.lua Backend]
-  }
-
-  database "MySQL Database" {
-    [server_vehicles table]
-    [accounts table]
-  }
-  [server.lua Backend] --> [server_vehicles table] : dbExec / dbQuery (Non-Blocking)
-}
-@enduml
-```
-</details>
-
----
-
-### ۵. دیاگرام جریان منطقی موتور ضد انفجار (Activity Diagram)
-*زاویه دید: الگوریتم ابداعی فایل `server.lua` برای جلوگیری از روی‌هم افتادن و انفجار خودروها.*
-
-[![Activity Diagram](https://www.plantuml.com/plantuml/svg/TK-D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/TK-D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/TK-D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
-
-```plantuml
-@startuml
+!theme plain
 start
-:اجرای تابع loadAllVehicles();
+:فراخوانی متد بارگذاری خودروها (loadAllVehicles);
 :ارسال کوئری SELECT * FROM server_vehicles;
-:دریافت رکوردها در کالبک ناهمگام dbPoll;
+:دریافت نتایج در Thread اختصاصی دیتابیس;
 
-while (آیا رکورد بررسی‌نشده وجود دارد؟) is (بله)
-  :خواندن اطلاعات ردیف (dbid, model, x, y, z);
-  :پیمایش تمام ماشین‌های موجود در حافظه (getElementsByType);
-  if (ماشینی با این dbid یا در فاصله کمتر از ۲ متر وجود دارد؟) then (بله)
-    :اتصال شناسه dbid به ماشین موجود;
-    :ست کردن پرچم isPermanent و زمان‌ها;
-    note right: جلوگیری از ساخت خودروی تکراری و انفجار فیزیکی
-  else (خیر)
-    :ایجاد ماشین با تابع createVehicle در مختصات Z + 0.15;
-    :تنظیم پایداری (Dimension:0, Interior:0);
-    :ثبت در متغیر لوکال spawnedVehicles;
-  endif
+while (آیا سطری برای پردازش باقی مانده است؟) is (بله)
+    :استخراج مشخصات (id, model, x, y, z, rx, ry, rz);
+    :پیمایش تمام وسایل نقلیه فعال در سرور (Loop);
+    if (آیا خودرویی با همین dbid ثبت شده است؟) then (بله)
+        :شناسایی به عنوان existingVeh;
+    else (خیر)
+        if (فاصله خودرو تا نقطه spawn < 2.0m ؟) then (بله)
+            :شناسایی به عنوان existingVeh (احتمال همپوشانی فیزیکی);
+        else (خیر)
+            :پیمایش حلقه بعدی ادامه یابد;
+        endif
+    endif
+
+    if (آیا existingVeh معتبر در بازی وجود دارد؟) then (بله)
+        #LightGreen:به‌روزرسانی ElementData بدون ساخت مجدد;
+        :ثبت رفرنس در هش‌مپ داخلی spawnedVehicles;
+    else (خیر)
+        #LightYellow:اعمال ضریب ایمنی ارتفاع (z = z + 0.15);
+        :فراخوانی createVehicle();
+        :تنظیم دیمنشن و اینتریور به صفر;
+        :تنظیم موقعیت ری‌اسپاون قانونی (setVehicleRespawnPosition);
+        :افزودن شیء ایجادشده به هش‌مپ spawnedVehicles;
+    endif
 endwhile (خیر)
 
-:ثبت تعداد خودروهای لود شده در کنسول دیباگ;
+:ثبت گزارش نهایی در DebugString سرور;
 stop
 @enduml
-```
-</details>
 
----
+دیاگرام ۴: توالی ذخیره‌سازی و پارک خودرو در لحظه (Sequence Diagram - Vehicle Park/Update)
 
-### ۶. دیاگرام موارد کاربرد (Use Case Diagram)
-*زاویه دید: تعامل مدیر و دیتابیس در بستر سناریوهای کاربری سیستم.*
+فرآیند ثبت مختصات فضایی جدید خودروی در حال سواری یا ایجاد رکورد دائمی جدید برای
+ماشین‌های موقت سرور.
 
-[![Use Case Diagram](https://www.plantuml.com/plantuml/svg/TD3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/TD3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/TD3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
-
-```plantuml
 @startuml
-left to right direction
-actor "ادمین سرور (Admin)" as Admin
-actor "پایگاه داده MySQL" as DB
+!theme plain
+autonumber
+skinparam sequenceMessageAlign center
 
-rectangle "مدیریت وسایل نقلیه (admin_vehicles)" {
-  usecase "احراز هویت و بررسی رنک ادمین" as UC_Auth
-  usecase "اسپاون خودروی جدید از تب کاتالوگ" as UC_Spawn
-  usecase "ثبت یا ویرایش موقعیت پارک در دیتابیس" as UC_Park
-  usecase "نشانه‌گذاری خودرو (Marker فلش + Blip نقشه)" as UC_Marker
-  usecase "تلپورت فوری به خودرو" as UC_Teleport
-  usecase "ریست مکان خودرو به پوزیشن ذخیره‌شده" as UC_Reset
-  usecase "حذف دائمی خودرو از بازی و دیتابیس" as UC_Delete
-}
+actor "Admin" as Admin
+boundary "CEF Dashboard" as UI
+control "Client Lua" as CL
+control "Server Logic" as SL
+database "Database" as DB
 
-Admin --> UC_Auth
-Admin --> UC_Spawn
-Admin --> UC_Park
-Admin --> UC_Marker
-Admin --> UC_Teleport
-Admin --> UC_Reset
-Admin --> UC_Delete
+Admin -> UI: کلیک روی دکمه "ثبت موقعیت پارک"
+UI -> CL: triggerMTA("onWebSaveCurrentCar")
+CL -> SL: triggerServerEvent("onAdminSaveCurrentOccupiedVehicle")
+activate SL
 
-UC_Auth ..> DB : SELECT admin_level
-UC_Park ..> DB : INSERT / UPDATE Coords
-UC_Delete ..> DB : DELETE
+SL -> SL: واکشی خودرو از طریق getPedOccupiedVehicle(client)
+alt مدیر پیاده است
+    SL --> Admin: ارسال پیام خطای الزامی بودن حضور در خودرو
+else مدیر سوار بر خودرو است
+    SL -> SL: استخراج مختصات (x,y,z) و زوایا (rx,ry,rz)
+    SL -> SL: بررسی متادیتای موجودیت (dbid)
+    
+    alt خودرو قبلاً شناسه پایگاه داده دارد (Update Mode)
+        SL -> DB: dbExec("UPDATE server_vehicles SET x=?,y=?,z=? WHERE id=?", ...)
+        SL -> SL: setVehicleRespawnPosition(veh, x, y, z, rx, ry, rz)
+        SL --> Admin: نمایش پیام "موقعیت پارک آپدیت شد"
+    else خودرو موقت است و شناسه ندارد (Insert Mode)
+        SL -> DB: dbQuery("INSERT INTO server_vehicles (...) VALUES (...)")
+        activate DB
+        DB --> SL: تحویل insertId رکورد جدید
+        deactivate DB
+        SL -> SL: پیوست داده‌ها (setElementData: dbid, isPermanent)
+        SL -> SL: ثبت در متغیر محلی spawnedVehicles[insertId]
+        SL --> Admin: نمایش پیام "خودرو در دیتابیس ثبت شد"
+    end
+    
+    SL -> SL: triggerEvent("requestSavedVehiclesList", client)
+    SL --> CL: ارسال لیست به‌روزشده خودروها
+    CL --> UI: بازسازی سطرها و به‌روزرسانی نمای پنل
+end
+deactivate SL
 @enduml
-```
-</details>
 
----
+دیاگرام ۵: مدل موجودیت-رابطه پایگاه داده (Entity-Relationship Diagram - ERD)
 
-### ۷. دیاگرام استقرار (Deployment Diagram)
-*زاویه دید: نگاشت فیزیکی و پروتکل‌های اجرایی در سطح سرور، سیستم بازیکن و پورت‌های شبکه.*
+تعریف ساختار جداول، وابستگی‌های ارتباطی و نوع فیلدهای کلیدی پایگاه داده سیستم.
 
-[![Deployment Diagram](https://www.plantuml.com/plantuml/svg/TL3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)](https://editor.plantuml.com/uml/TL3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-👉 [🌐 باز کردن و ویرایش زنده در PlantUML Editor](https://editor.plantuml.com/uml/TL3D2i8m40NWUvu1_W7u5r08iHwM4m8r2m8W3m3bT2s3N1uA5gP7-V_TttxZ1bM9Rz3t1v4n1m7f2u3X1c4Y5m9Q0r8d2e8b6m9n1o7p5q4s3t2u1v0w9x8y7z6a5b4c3d2e1f0g9h8i7j6k5l4m3n2o1p0q9r8s7t6u5v4w3x2y1z)
-
-<details>
-<summary>📋 مشاهده کد PlantUML</summary>
-
-```plantuml
 @startuml
-node "Client Node (دستگاه بازیکن)" {
-  component "DirectX Engine (MTA Render)" as RenderEngine
-  node "Chromium Embedded Framework (CEF)" {
-    artifact "ui/index.html (HTML/CSS/JS)" as WebUI
-  }
-  artifact "client.lua (Client Logic)" as ClientScript
-  WebUI <-> ClientScript : CEF Binding IPC
-  ClientScript -> RenderEngine : Direct Render Call
+!theme plain
+hide circle
+skinparam linetype ortho
+
+entity "**accounts**" as acc {
+  * **username** : VARCHAR(64) [PK]
+  --
+  * **admin_level** : INT DEFAULT -1
+  * **serial** : VARCHAR(64)
+  * **last_login** : TIMESTAMP
 }
 
-node "Dedicated Server Host (سرور اختصاصی)" {
-  node "MTA Server Core (C++ Host)" {
-    artifact "server.lua (Server Logic)" as ServerScript
-    artifact "meta.xml (Manifest)" as MetaAsset
-    component "Virtual World Elements" as WorldElements
-  }
-
-  database "MySQL RDBMS (Port 3306)" {
-    database "mta_db" as DBInstance
-  }
+entity "**server_vehicles**" as sv {
+  * **id** : INT UNSIGNED [PK, AUTO_INCREMENT]
+  --
+  * **model** : SMALLINT UNSIGNED
+  * **x** : FLOAT(10,4)
+  * **y** : FLOAT(10,4)
+  * **z** : FLOAT(10,4)
+  * **rx** : FLOAT(10,4)
+  * **ry** : FLOAT(10,4)
+  * **rz** : FLOAT(10,4)
+  * **plate** : VARCHAR(32)
+  * **created_at** : TIMESTAMP
+  * **updated_at** : TIMESTAMP
 }
 
-ClientScript <..> ServerScript : Net-Traffic (UDP Port 22003 / RakNet)
-ServerScript --> WorldElements : دستکاری و اسپاون خودروها
-ServerScript --> DBInstance : TCP Connection (dbExec / dbQuery)
+entity "**MTA_ACL_Groups**" as acl <<Virtual Registry>> {
+  * **group_name** : "Admin"
+  --
+  * **object_entry** : "user." + accountName
+}
+
+acc ||..o{ acl : "اعتبارسنجی سطح دسترسی سیستم"
+acc ||..o{ sv : "تغییر و مدیریت به عنوان کارشناس ارشد"
 @enduml
-```
-</details>
 
----
+دیاگرام ۶: ماشین وضعیت چرخه حیات شیء در حافظه و بازی (State Machine Diagram)
 
-## 🛡️ ارزیابی امنیتی، فنی و تجربیات به دست آمده
+مدل‌سازی وضعیت‌های انتزاعی یک خودرو از زمان تعاریف اولیه تا امحا از سیستم فیزیکی
+و پایگاه داده.
 
-### ۱. مکانیزم اتصال به دیتابیس (Database Layer)
-* تمامی تبادلات از طریق توابع غیرمسدودکننده (Non-blocking) یعنی `dbQuery` و `dbExec` با درایور استاندارد MySQL انجام می‌شوند. 
-* برای جلوگیری قطعی از **SQL Injection**، هیچ متغیری با عملگر الحاق رشته (`..`) وارد کوئری نشده و منحصراً از پارامترهای جایگزین امن (`?`) استفاده شده است.
+@startuml
+!theme plain
+skinparam state {
+    BackgroundColor #F8FAFC
+    BorderColor #64748B
+    ArrowColor #0F172A
+}
 
-### ۲. اعتبارسنجی امنیتی چندلایه‌ای (Authorization)
-* حتی اگر متقلبین (Cheaters) با استفاده از اینجکتورهای حافظه یا اجرای کد کلاینت بتوانند پنجره وب را باز کنند، تمام ایونت‌های حیاتی مانند `onAdminDeleteVehicle`، `onAdminCreatePermanentVehicle` و `onAdminSaveCurrentOccupiedVehicle` در سمت سرور مقدار `client` و سطح `admin_level` وی را اعتبارسنجی می‌کنند؛ اگر کاربر مجاز نباشد، دستور نادیده گرفته می‌شود.
+[*] --> Transient_Memory : اسپاون موقت توسط ادمین (onWebSpawnNew)
+[*] --> Database_Row : بارگذاری اولیه از دیتابیس موجود
 
-### ۳. هماهنگی با دیگر ریسورس‌ها (Inter-resource Compatibility)
-* خودروهای ثبت‌شده در این پنل دارای داده هویتی `isPermanent = true` می‌شوند. این شناسه به سیستم‌های پاکسازی خودکار خودرو (Cleaners / Despawn Scripts) اعلام می‌کند که این خودرو سازمانی/عمومی است و نباید به عنوان ماشین رهاشده حذف شود.
+state Transient_Memory {
+    description: "خودرو در رم وجود دارد ولی فاقد ID دیتابیس است."
+}
 
----
+state Permanent_Synchronized {
+    description: "شناسه دیتابیس دارد، به حافظه لوکال سرور متصل است."
+    
+    state Parked_At_Base : خودرو در مختصات پیش‌فرض پارک قرار دارد
+    state Displaced_Driven : خودرو توسط بازیکنان رانده شده و جابجا شده است
+    
+    Parked_At_Base --> Displaced_Driven : حرکت فیزیکی در جهان بازی
+    Displaced_Driven --> Parked_At_Base : ریست مختصات (respawnVehicle)
+}
 
-## 🚀 راهنمای نصب و راه‌اندازی
+Transient_Memory --> Permanent_Synchronized : اجرای دستور /park (عملیات INSERT)
+Permanent_Synchronized --> Permanent_Synchronized : به‌روزرسانی مکان پارک (UPDATE)
 
-1. دیتابیس سرور خود را ساخته و در خط اول `server.lua` مشخصات اتصال را وارد کنید:
-   ```lua
-   local db = dbConnect("mysql", "dbname=mta_db;host=127.0.0.1;port=3306;charset=utf8mb4", "root", "PASSWORD")
-   ```
-2. پوشه `admin_vehicles` را در مسیر `resources` قرار دهید.
-3. در کنسول سرور بنویسید:
-   ```bash
-   refresh
-   start admin_vehicles
-   ```
-4. داخل بازی با فشردن کلید **`F6`** یا دستور **`/vehpanel`** پنل را باز کنید.
+state Marked_Tracked {
+    description: "مارکر نئونی بالای سقف و علامت نقشه (Blip) فعال است."
+}
+
+Permanent_Synchronized --> Marked_Tracked : فعال‌سازی ردیاب (onWebToggleMarker)
+Marked_Tracked --> Permanent_Synchronized : غیرفعال‌سازی یا ساخت مارکر جدید
+
+Permanent_Synchronized --> [*] : حذف قطعی از دیتابیس و انهدام عنصر فیزیکی (onWebDelete)
+Transient_Memory --> [*] : خاموش شدن سرور یا انهدام شیء بدون ذخیره
+@enduml
+
+دیاگرام ۷: جریان احراز هویت و پایش دسترسی ادمین (Security Flow Diagram)
+
+جریان تأیید اعتبار درخواست‌های ریموت و ایزولاسیون کامل هسته سرور از دستکاری‌های
+غیرمجاز پکت‌های شبکه کلاینت.
+
+@startuml
+!theme plain
+start
+:کلاینت رویدادی ارسال می‌کند (مثال: onAdminDeleteVehicle);
+:موتور سرور متغیر پنهان 'client' را استخراج می‌کند;
+
+if (آیا 'client' معتبر بوده و از نوع 'player' است؟) then (بله)
+    :فراخوانی getAdminLevel(client);
+    :واکشی getElementData(client, "admin_level");
+    if (admin_level >= 0 ؟) then (بله)
+        #LightGreen:مجوز تأیید شد: پردازشگر رویداد اجرا می‌شود;
+        :اعتبارسنجی نوع آرگومان ورودی (tonumber(dbid));
+        if (آیا پارامترها ساختار معتبر عددی دارند؟) then (بله)
+            :اجرای تراکنش دیتابیس و حذف عنصر از سرور;
+            :ارسال تأییدیه با outputChatBox به مدیر;
+        else (خیر)
+            #Pink:رد پکت ناهنجار و نادیده‌گرفتن دستور;
+        endif
+    else (خیر)
+        #Tomato:تلاش غیرمجاز: رد بسته شبکه و پایان;
+        stop
+    endif
+else (خیر)
+    #Red:پکت دستکاری‌شده بدون رفرنس بازیکن: نابودی آنی پکت;
+    stop
+endif
+stop
+@enduml
+
+۸. نتیجه‌گیری و ارزیابی فنی (Technical Conclusion)
+
+ریسورس مهندسی‌شده admin_vehicles با بهره‌گیری از معماری لایه‌ای مدرن و تلفیق
+مرورگر تعبیه‌شده کرومیوم (CEF) با پردازش رویدادمحور Lua و پایداری‌سازی در MySQL،
+راهکاری جامع، فوق‌سریع و با پایداری صنعتی جهت مدیریت وسایل نقلیه دائمی ارائه
+می‌کند.
+
+به‌کارگیری تکنیک‌های مقایسه شعاع مکانی و همگام‌سازی فراداده‌های هویتی پیش از
+ایجاد اشیا، خطای ذاتی برخورد موتور فیزیک بازی سنتی را ریشه‌کن کرده و ساختار
+غیرمسدودکننده توابع داده‌ای، پیوستگی عملکرد تیک‌های پردازشی سرور (Stable
+Tick-Rate) را حتی تحت بارهای محاسباتی سنگین کاملاً تضمین می‌نماید.
