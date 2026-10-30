@@ -1,6 +1,7 @@
 <div dir="rtl">
 
 # 🌐 SilentRP — گیم‌مود ماژولار رول‌پلی (MTA:SA)
+![0](image.png)
 > یک فریم‌ورک استاندارد، بهینه‌سازی‌شده و ماژولار برای سرورهای Roleplay در پلتفرم Multi Theft Auto بر پایه Lua و MySQL.
 
 <p align="center">

@@ -8020,3 +8020,61 @@
 [2026-10-30 16:30:58] CONNECT: SilentGalaxy connected (IP: 192.168.1.3  Serial: C8779B48243D9EB1BDB4DED901100C43  Version: 1.6.0-9.24149.0)
 [2026-10-30 16:30:58] JOIN: SilentGalaxy joined the game (IP: 192.168.1.3)
 [2026-10-30 16:31:01] WARNING: auth\modules\account\server_auth.lua:15: Access denied @ 'setPlayerMuted'
+==================================================================
+= Multi Theft Auto: San Andreas v1.6
+==================================================================
+= Server name      : My Custom MTA Server
+= Server IP address: auto
+= Server port      : 22003
+= 
+= Log file         : ../mta/server/mods/deathmatch/logs/server.log
+= Maximum players  : 32
+= HTTP port        : 22005
+= Voice Chat       : Disabled
+= Bandwidth saving : Medium
+==================================================================
+[2026-10-30 16:39:25] Resources: 9 loaded, 0 failed
+[2026-10-30 16:39:25] Starting resources...
+[2026-10-30 16:39:25] ERROR: Couldn't find resource admin. Check it exists.
+[2026-10-30 16:39:25] INFO: [AUTH/DB] MySQL Connected successfully.
+[2026-10-30 16:39:25] ERROR: Couldn't find resource hud. Check it exists.
+[2026-10-30 16:39:25] WARNING: admin_vehicles/server.lua(Line 248) [Server] warpPlayerIntoVehicle is deprecated and may not work in future versions. Please replace with warpPedIntoVehicle before Tuesday.
+[2026-10-30 16:39:25] Some files in 'admin_vehicles' use deprecated functions.
+[2026-10-30 16:39:25] Use the 'upgrade' command to perform a basic upgrade of resources.
+[2026-10-30 16:39:25] INFO: [MySQL] دیتابیس با موفقیت متصل شد.
+[2026-10-30 16:39:25] WARNING: veh_core/client.lua(Line 127) [Client] setControlState is deprecated and may not work in future versions. Please replace with setPedControlState before Tuesday.
+[2026-10-30 16:39:25] WARNING: veh_core/client.lua(Line 167) [Client] getControlState is deprecated and may not work in future versions. Please replace with getPedControlState before Tuesday.
+[2026-10-30 16:39:25] WARNING: veh_core/client.lua(Line 306) [Client] getControlState is deprecated and may not work in future versions. Please replace with getPedControlState before Tuesday.
+[2026-10-30 16:39:25] Some files in 'veh_core' use deprecated functions.
+[2026-10-30 16:39:25] Use the 'upgrade' command to perform a basic upgrade of resources.
+[2026-10-30 16:39:25] Authorized serial account protection is enabled for the ACL group(s): `Admin`  See http://multitheftauto.com/authserial
+[2026-10-30 16:39:25] WARNING: <owner_email_address> not set
+[2026-10-30 16:39:25] Server started and is ready to accept connections!
+[2026-10-30 16:39:25] To stop the server, type 'shutdown' or press Ctrl-C
+[2026-10-30 16:39:25] Type 'help' for a list of commands.
+[2026-10-30 16:39:25] INFO: [Vehicles] 56 خودرو بررسی و بارگذاری شدند.
+[2026-10-30 16:39:26] Querying MTA master server... success! (Auto detected IP:77.77.106.222)
+[2026-10-30 16:39:30] Server minclientversion is now 1.6.0-9.24109.0
+[2026-10-30 16:39:30] CONNECT: SilentGalaxy connected (IP: 192.168.1.3  Serial: C8779B48243D9EB1BDB4DED901100C43  Version: 1.6.0-9.24149.0)
+[2026-10-30 16:39:30] JOIN: SilentGalaxy joined the game (IP: 192.168.1.3)
+[2026-10-30 16:39:33] WARNING: auth\modules\account\server_auth.lua:15: Access denied @ 'setPlayerMuted'
+[2026-10-30 19:03:41] WARNING: v_mechanic\server.lua:144: Bad argument @ 'setVehicleDamageProof' [Expected bool at argument 2, got string '1']
+[2026-10-30 19:26:39] WARNING: death_system\server.lua:105: Bad argument @ 'toggleAllControls' [Expected player at argument 1, got ped]
+[2026-10-30 19:27:22] WARNING: death_system\server.lua:105: Bad argument @ 'toggleAllControls' [Expected player at argument 1, got ped]
+[2026-10-30 19:32:14] WARNING: death_system\server.lua:105: Bad argument @ 'toggleAllControls' [Expected player at argument 1, got ped]
+[2026-10-30 20:39:30] QUIT: SilentGalaxy left the game [Quit] 
+==================================================================
+= Multi Theft Auto: San Andreas v1.6
+==================================================================
+= Server name      : My Custom MTA Server
+= Server IP address: auto
+= Server port      : 22003
+= 
+= Log file         : ../mta/server/mods/deathmatch/logs/server.log
+= Maximum players  : 32
+= HTTP port        : 22005
+= Voice Chat       : Disabled
+= Bandwidth saving : Medium
+==================================================================
+[2026-10-30 20:54:39] Resources: 9 loaded, 0 failed
+[2026-10-30 20:54:39] ERROR: Could not bind the server on interface '' and port '22003'!
