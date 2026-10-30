@@ -132,3 +132,364 @@ resources/
    refresh
    start veh_core
    ```
+
+
+
+
+
+
+
+
+
+
+   ---
+
+## 📊 دیاگرام‌های فنی و معماری سیستم (PlantUML)
+
+### ۱. نمودار توالی (Sequence Diagram): چرخه تعامل ورودی کاربر، منطق کلاینت، سرور و رابط CEF
+این دیاگرام مسیر پردازش فرمان کاربر (مانند فشردن کلید ترمز دستی یا استارت)، اعتبارسنجی سمت سرور و اعمال بلادرنگ آن در مرورگر را نشان می‌دهد.
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam defaultFontColor #e2e8f0
+skinparam sequence {
+    ArrowColor #00e5ff
+    ActorBorderColor #00e5ff
+    LifeLineBorderColor #64748b
+    LifeLineBackgroundColor #1e293b
+    ParticipantBorderColor #00e5ff
+    ParticipantBackgroundColor #1e293b
+    ParticipantFontColor #ffffff
+}
+
+autonumber
+actor "راننده (Driver)" as Player
+participant "CEF UI (HTML/JS)" as CEF
+participant "کلاینت (client.lua)" as Client
+participant "سرور (server.lua)" as Server
+database "داده‌های همگام (ElementData)" as NetData
+
+Player -> Client: فشردن کلید [3] (Handbrake)
+Client -> Client: محاسبه سرعت برداری خودرو
+Client -> Server: triggerServerEvent("veh:setHandbrake", veh, true)
+
+activate Server
+Server -> Server: بررسی احراز هویت: getVehicleOccupant(veh, 0) == client
+Server -> NetData: setElementData(veh, "handbrake", true)
+deactivate Server
+
+NetData --> Client: ارسال وضعیت جدید در شبکه
+Client -> Client: فعال‌سازی فیزیک ترمز در حلقه onClientRender
+Client -> CEF: executeBrowserJavascript("updateHUD(...)")
+activate CEF
+CEF -> CEF: تغییر نشانگر دنده به P و روشن‌کردن آیکون ترمز
+deactivate CEF
+@enduml
+```
+
+---
+
+### ۲. ماشین وضعیت (State Machine Diagram): فیزیک دوگانه ترمز دستی
+شبیه‌سازی تمایز میان «دریفت در سرعت بالا» و «فریز کامل خودرو در سرعت زیر ۲ کیلومتر بر ساعت».
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam state {
+    BackgroundColor #1e293b
+    BorderColor #00e5ff
+    FontColor #ffffff
+    ArrowColor #00e5ff
+    StartColor #00e676
+    EndColor #ff3b30
+}
+
+[*] --> ترمز_دستی_خاموش : مقدار handbrake = false
+
+ترمز_دستی_خاموش --> فعال‌سازی : فشردن کلید [3]
+
+state "بررسی سرعت لحظه‌ای" as سرعت {
+    state "حالت رانش / دریفت (Drift)" as حالت_حرکت {
+        حالت_حرکت : setPedControlState("handbrake", true)
+        حالت_حرکت : setElementFrozen(veh, false)
+    }
+
+    state "ایست و قفل کامل (Park Lock)" as حالت_سکون {
+        حالت_سکون : setPedControlState("handbrake", false)
+        حالت_سکون : triggerServerEvent("veh:freeze", true)
+        حالت_سکون : نمایش دنده P در HUD
+    }
+
+    حالت_حرکت --> حالت_سکون : کاهش سرعت به زیر 2 km/h
+    حالت_سکون --> حالت_حرکت : افزایش سرعت با نیروی خارجی
+}
+
+فعال‌سازی --> حالت_حرکت : سرعت > 2 km/h
+فعال‌سازی --> حالت_سکون : سرعت <= 2 km/h
+
+سرعت --> ترمز_دستی_خاموش : فشردن مجدد کلید [3]\n(setElementFrozen = false)
+@enduml
+```
+
+---
+
+### ۳. نمودار فعالیت (Activity Diagram): پروتکل ایمنی کمربند و پرتاب سرنشین
+منطق تایمر ۲۰۰ میلی‌ثانیه‌ای و واکنش به تلاش بازیکن برای پیاده شدن یا حرکت با سرعت غیرمجاز بدون کمربند.
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam defaultFontColor #ffffff
+skinparam activity {
+    BackgroundColor #1e293b
+    BorderColor #00e5ff
+    FontColor #ffffff
+    ArrowColor #38bdf8
+    DiamondBackgroundColor #0f172a
+    DiamondBorderColor #00e5ff
+}
+
+start
+:پلیر درون کابین خودرو مستقر است;
+
+if (تلاش برای خروج (کلید F / Enter)؟) then (بله)
+    if (کمربند ایمنی بسته است؟) then (بله)
+        :لغو دستور خروج (cancelEvent);
+        :پخش صدای هشدار قفل (Sound 42);
+        stop
+    else (خیر)
+        :اجازه خروج عادی از خودرو;
+        stop
+    endif
+endif
+
+:بررسی تایمر دوره‌ای (هر 200 میلی‌ثانیه);
+:محاسبه سرعت برداری خودرو (Speed);
+
+if (سرعت >= 30 km/h؟) then (بله)
+    if (کمربند بسته است (seatbelt == true)؟) then (بله)
+        :مجاز به رانندگی بدون مداخله;
+    else (خیر)
+        #ff3b30:تحریک پد با دستور enter_exit;
+        #ff3b30:پرتاب کاراکتر به بیرون جهت جریمه ایمنی;
+    endif
+else (خیر)
+    :وضعیت عادی با سرعت پایین;
+endif
+
+stop
+@enduml
+```
+
+---
+
+### ۴. نمودار مؤلفه (Component Diagram): معماری ماژولار پکیج veh_core
+نحوه قرارگیری لایه‌های فرانت وب، ران‌تایم کلاینت و هسته توزیع سرور.
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam componentStyle uml2
+skinparam defaultFontColor #ffffff
+
+skinparam component {
+    BackgroundColor #1e293b
+    BorderColor #00e5ff
+    FontColor #ffffff
+    ArrowColor #38bdf8
+}
+skinparam interface {
+    BackgroundColor #00e5ff
+    BorderColor #ffffff
+}
+
+package "مرورگر داخل بازی (Chromium Embedded Framework)" {
+    [صفحه استاتیک: index.html] as HTML
+    [استایل نئونی: style.css] as CSS
+    [کنترلر فرانت: script.js] as JS
+    HTML ..> CSS : استایل‌دهی Glassmorphism
+    HTML ..> JS : اسکریپت رندر گیج SVG
+}
+
+package "سورس کلاینت (client.lua)" {
+    [CEF Bridge] as Bridge
+    [موتور محاسبات فیزیک و سرعت] as Physics
+    [رندر کروناهای نوری (3D Markers)] as Corona
+    [مدیریت بایند کلیدها (Binds)] as Input
+}
+
+package "سورس سرور (server.lua)" {
+    [کنترل وضعیت موتور و چراغ‌ها] as VehState
+    [اعتبارسنجی صندلی راننده] as Auth
+    [مدیریت وضعیت درب‌ها] as DoorCtrl
+}
+
+Input --> Physics : فشردن کلیدهای 1 تا 4 و Q/E/F1
+Physics --> Bridge : ارسال پارامترها به صورت رشته به JS
+JS --> Bridge : رویدادهای کلیک موس روی دیاگرام خودرو
+Bridge --> Auth : triggerServerEvent
+Auth --> VehState : تغییر متغیرهای سینک شده
+Auth --> DoorCtrl : تنظیم زاویه باز شدن درب (OpenRatio)
+VehState ..> Corona : بروزرسانی بصری راهنماها
+@enduml
+```
+
+---
+
+### ۵. نمودار موارد کاربرد (Use Case Diagram): سطوح دسترسی راننده در مقابل سرنشین
+تفکیک دقیق اختیارات میان جایگاه راننده (صندلی ۰) و سایر سرنشینان کابین.
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam defaultFontColor #ffffff
+skinparam actor {
+    BackgroundColor #1e293b
+    BorderColor #00e5ff
+    FontColor #ffffff
+}
+skinparam usecase {
+    BackgroundColor #1e293b
+    BorderColor #00e5ff
+    FontColor #ffffff
+    ArrowColor #38bdf8
+}
+
+left to right direction
+
+actor "راننده (Driver / Seat 0)" as Driver
+actor "سرنشین (Passenger)" as Passenger
+
+package "هسته مدیریت خودرو (veh_core)" {
+    usecase "بستن / باز کردن کمربند [4]" as UC_Seatbelt
+    usecase "استارت / خاموش کردن موتور [1]" as UC_Engine
+    usecase "روشن / خاموش کردن چراغ‌ها [2]" as UC_Lights
+    usecase "درگیر کردن ترمز دستی [3]" as UC_Handbrake
+    usecase "کنترل راهنما و فلاشر [Q/E/Caps]" as UC_Indicators
+    usecase "باز کردن پنل هوشمند خودرو [F1]" as UC_Panel
+    usecase "کنترل انتخابی درب‌ها، کاپوت و صندوق" as UC_Doors
+}
+
+Passenger --> UC_Seatbelt
+
+Driver --> UC_Seatbelt
+Driver --> UC_Engine
+Driver --> UC_Lights
+Driver --> UC_Handbrake
+Driver --> UC_Indicators
+Driver --> UC_Panel
+
+UC_Panel ..> UC_Doors : شامل می‌شود (include)
+@enduml
+```
+
+---
+
+### ۶. نمودار ساختار داده و ویژگی‌ها (Class / Data Model Diagram)
+نحوه نگهداری وضعیت خودرو و پلیر در حافظه موقت و تبادل آن‌ها با فرمت JSON.
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam defaultFontColor #ffffff
+skinparam class {
+    BackgroundColor #1e293b
+    BorderColor #00e5ff
+    FontColor #ffffff
+    HeaderBackgroundColor #0f172a
+    ArrowColor #00e5ff
+}
+
+class "Player Element" as Player {
+    + seatbelt : boolean
+    --
+    + toggleSeatbelt() : void
+    + playSound(soundId : int) : void
+}
+
+class "Vehicle Element" as Vehicle {
+    + handbrake : boolean
+    + indicator : string ["off"|"left"|"right"|"hazard"]
+    + engineState : boolean
+    + overrideLights : int [1 | 2]
+    + doorRatios : float[0..5]
+    --
+    + getBoundingBox() : Vector3[min, max]
+    + setDoorRatio(door: int, ratio: float) : void
+    + setFrozen(frozen: boolean) : void
+}
+
+class "HUD State Payload (JSON)" as HUDData {
+    + speed : int
+    + gear : string ["P"|"R"|"N"|"D"]
+    + engine : boolean
+    + lights : boolean
+    + handbrake : boolean
+    + indicator : string
+    + seatbelt : boolean
+    + anyDoorOpen : boolean
+    + flashState : boolean
+    + doorsJson : string (Array<boolean>)
+}
+
+Vehicle "1" *-- "0..6" Player : سرنشینان
+Vehicle --> HUDData : استخراج و ارسال به CEF
+Player --> HUDData : وضعیت کمربند
+@enduml
+```
+
+---
+
+### ۷. نمودار زمان‌بندی (Timing Diagram): چرخه حیات فلاشر ۵ ثانیه‌ای در تصادفات شدید
+نمایش رفتار همزمان تایمرها، وضعیت چراغ‌های کرونای نارنجی و صدای کلیک رله در طول ۵ ثانیه بحرانی پس از تصادف.
+
+```plantuml
+@startuml
+skinparam backgroundColor #0d111b
+skinparam defaultFontColor #ffffff
+
+clock "تایمر داخلی فلاشر (380ms)" as C with period 50
+binary "تشخیص تصادف شدید (Force > 280)" as Impact
+robust "وضعیت داده خودرو (indicator)" as IndData
+binary "خروجی رندر نور مارکرها (Alpha)" as MarkerLight
+binary "صدای تیک‌تاک داشبورد (Sound 37)" as RelaySound
+
+@0
+Impact is low
+IndData is "off"
+MarkerLight is low
+RelaySound is low
+
+@100
+Impact is high
+IndData is "hazard"
+
+@150
+Impact is low
+MarkerLight is high
+RelaySound is high
+
+@200
+MarkerLight is low
+RelaySound is low
+
+@250
+MarkerLight is high
+RelaySound is high
+
+@300
+MarkerLight is low
+RelaySound is low
+
+@350
+MarkerLight is high
+RelaySound is high
+
+@500
+IndData is "off"
+note bottom of IndData : اتمام زمان ۵ ثانیه (killTimer)
+MarkerLight is low
+RelaySound is low
+@enduml
+```
