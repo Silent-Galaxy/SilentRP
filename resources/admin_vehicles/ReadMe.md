@@ -5,13 +5,15 @@
 [![Lua](https://img.shields.io/badge/Language-Lua-000080.svg)](https://www.lua.org/)
 [![UI](https://img.shields.io/badge/UI-CEF%20%7C%20HTML5%2FJS-orange.svg)]()
 
-![alt text](image-7.png)
+![بخش اول  پنل](image-7.png)
 
++
 
-![alt text](image-8.png)
+![وقتی سوار ماشین میشوید](image-8.png)
 
++
 
-![alt text](image-9.png)
+![بخش دوم پنل](image-9.png)
 یک ابزار مدرن، گرافیکی و تعاملی تحت وب (CEF) برای ادمین‌های سرور MTA:SA جهت اسپاون، پارک دائمی در دیتابیس MySQL، ردیابی زنده و مدیریت هوشمند ناوگان نقلیه بدون ایجاد تداخل و انفجار فیزیکی.
 
 ---
