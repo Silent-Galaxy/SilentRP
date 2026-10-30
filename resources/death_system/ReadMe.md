@@ -3,8 +3,9 @@
 ![0](image-7.png)
 ![00](image-8.png)
 ![000](image-9.png)
-
-
+![0000](image-10.png)
+![00000](image-11.png)
+![000000](image-12.png)
 
 سیستم شبیه‌ساز جامع بیهوشی، امداد جاده‌ای، انتقال اورژانسی و احیای بیمارستانی تحت بستر پلتفرم **Multi Theft Auto: San Andreas (MTA:SA)**.
 
