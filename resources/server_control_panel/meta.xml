@@ -1,0 +1,6 @@
+<meta>
+    <info author="Server Control" type="script" version="1.0" name="Server Control Panel" />
+    <script src="server.lua" type="server" />
+    <script src="client.lua" type="client" cache="false" />
+    <min_mta_version client="1.5.9" server="1.5.9" />
+</meta>

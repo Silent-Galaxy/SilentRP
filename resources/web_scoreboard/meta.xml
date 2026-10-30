@@ -1,0 +1,8 @@
+﻿<meta>
+    <info name="Fast Clean Scoreboard" author="Senior MTA Dev" type="script" version="4.0.0" />
+    <script src="server.lua" type="server" />
+    <script src="client.lua" type="client" cache="false" />
+    <file src="html/index.html" />
+    <file src="html/style.css" />
+    <file src="html/script.js" />
+</meta>

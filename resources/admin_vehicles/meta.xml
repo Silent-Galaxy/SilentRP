@@ -1,0 +1,6 @@
+<meta>
+    <info author="Custom Web Admin Veh" type="script" version="2.0.0" />
+    <script src="server.lua" type="server" />
+    <script src="client.lua" type="client" />
+    <file src="ui/index.html" />
+</meta>

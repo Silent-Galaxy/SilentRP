@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تخت عمل و مانیتورینگ</title>
+    <style>
+        body { margin:0; padding:15px; background:#0b1120; color:#fff; font-family:tahoma, Arial; user-select:none; }
+        h3 { text-align:center; color:#38bdf8; margin:5px 0 15px 0; }
+        .row { display:flex; gap:10px; }
+        .box { flex:1; background:#1e293b; padding:15px; border-radius:6px; border-right:4px solid #0284c7; }
+        .val { font-size:18px; font-weight:bold; color:#34d399; margin-top:5px; }
+        .p-bar { margin:15px 0; background:#334155; height:12px; border-radius:6px; overflow:hidden; }
+        .fill { width:0%; height:100%; background:#10b981; transition:width .3s; }
+        .btn-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+        button { padding:12px; border:none; border-radius:4px; background:#0284c7; color:#fff; cursor:pointer; font-size:13px; font-weight:bold; }
+        button:disabled { background:#475569; cursor:not-allowed; opacity:0.6; }
+        #end { background:#059669; }
+    </style>
+</head>
+<body>
+    <h3>واحد مراقبت‌های ویژه و احیا</h3>
+    <div class="row">
+        <div class="box">ضربان قلب:<div id="hr" class="val">-- BPM</div></div>
+        <div class="box">فشار خون:<div id="bp" class="val">--/--</div></div>
+    </div>
+    <div class="p-bar"><div id="f" class="fill"></div></div>
+    <div class="btn-grid">
+        <button id="s1" onclick="st(1)">۱. سنجش نبض</button>
+        <button id="s2" onclick="st(2)" disabled>۲. مانیتور فشار</button>
+        <button id="s3" onclick="st(3)" disabled>۳. تزریق سرم</button>
+        <button id="end" onclick="st(4)" disabled>۴. احیا و ترخیص</button>
+    </div>
+    <script>
+        let p = 0;
+        function st(n) {
+            p += 25; document.getElementById("f").style.width = p + "%";
+            if (n === 1) { document.getElementById("hr").innerText = "42 BPM (بحرانی)"; document.getElementById("s1").disabled = true; document.getElementById("s2").disabled = false; }
+            if (n === 2) { document.getElementById("bp").innerText = "7 / 4 mmHg"; document.getElementById("s2").disabled = true; document.getElementById("s3").disabled = false; }
+            if (n === 3) { document.getElementById("hr").innerText = "75 BPM (پایدار)"; document.getElementById("bp").innerText = "12 / 8 mmHg"; document.getElementById("s3").disabled = true; document.getElementById("end").disabled = false; }
+            if (n === 4) { mta.triggerEvent("client:finishTreatmentFromWeb"); }
+        }
+    </script>
+</body>
+</html>

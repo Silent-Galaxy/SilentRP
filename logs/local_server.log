@@ -1,0 +1,32 @@
+==================================================================
+= Multi Theft Auto: San Andreas v1.6
+==================================================================
+= Server name      : Default MTA Server
+= Server IP address: auto
+= Server port      : 22010
+= 
+= Log file         : ..erver/mods/deathmatch/logs/local_server.log
+= Maximum players  : 32
+= HTTP port        : 22011
+= Voice Chat       : Disabled
+= Bandwidth saving : Medium
+==================================================================
+[2026-10-03 23:15:09] File 'settings.xml' not present, creating new node.
+[2026-10-03 23:15:10] Resource 'runcode' requests some acl rights. Use the command 'aclrequest list runcode'
+[2026-10-03 23:15:10] Resources: 202 loaded, 0 failed
+[2026-10-03 23:15:10] Starting resources...
+[2026-10-03 23:15:10] Admin access list successfully updated 
+[2026-10-03 23:15:10] INFO: Admin added 610 missing rights
+[2026-10-03 23:15:10] Server minclientversion is now 1.5.9-9.20957.0
+[2026-10-03 23:15:10] Server minclientversion is now 1.6.0-9.22676
+[2026-10-03 23:15:10] Server minclientversion is now 1.6.0-9.22815
+[2026-10-03 23:15:10] Gamemode 'play' started.
+[2026-10-03 23:15:10] Server started and is ready to accept connections!
+[2026-10-03 23:15:10] To stop the server, type 'shutdown' or press Ctrl-C
+[2026-10-03 23:15:10] Type 'help' for a list of commands.
+[2026-10-03 23:15:11] CONNECT: SilentGalaxy connected (IP: 127.0.0.1  Serial: C8779B48243D9EB1BDB4DED901100C43  Version: 1.6.0-9.24149.0)
+[2026-10-03 23:15:12] JOIN: SilentGalaxy joined the game (IP: 127.0.0.1)
+[2026-10-03 23:35:56] QUIT: SilentGalaxy left the game [Quit] 
+[2026-10-03 23:35:56] Server stopped!
+[2026-10-03 23:35:56] Stopping resources...........................
+[2026-10-03 23:35:57] Closing SQLite3 database

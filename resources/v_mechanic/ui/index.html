@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>MTA Advanced Tuning</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="panel-container">
+        <!-- هدر -->
+        <div class="panel-header">
+            <div class="brand">
+                <div class="brand-icon">⚡</div>
+                <div>
+                    <h2>مرکز مکانیکی و تیونینگ خودرو</h2>
+                    <span id="veh-info" class="badge">شناسه: در حال دریافت...</span>
+                </div>
+            </div>
+            <div class="quick-tools">
+                <button class="tool-btn fix-btn" onclick="quickFix()">🛠️ صاف کردن و تعمیر</button>
+                <button class="tool-btn god-btn" id="godmode-btn" onclick="toggleGodmode()">🛡️ حالت ضد ضربه</button>
+                <button class="close-btn" onclick="closePanel()">✕</button>
+            </div>
+        </div>
+
+        <!-- تب‌ها -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'engine')">⚙️ موتور و دنده</button>
+            <button class="tab-btn" onclick="switchTab(event, 'brakes')">🛑 ترمز و فرمان</button>
+            <button class="tab-btn" onclick="switchTab(event, 'suspension')">📐 تعلیق و دوام</button>
+            <button class="tab-btn" onclick="switchTab(event, 'paint')">🌈 رنگ و رقص نور</button>
+            <button class="tab-btn" onclick="switchTab(event, 'presets')">💾 پروفایل‌ها</button>
+        </div>
+
+        <!-- محتوا -->
+        <div class="tab-content">
+            
+            <!-- تب ۱: موتور و دنده -->
+            <div id="tab-engine" class="tab-pane active">
+                <div class="input-card">
+                    <label>حالت گیربکس (انتقال دنده):</label>
+                    <div class="gear-toggle-box">
+                        <button class="gear-btn active" id="btn-auto-gear" onclick="setTransmissionMode('auto')">اتوماتیک (استاندارد)</button>
+                        <button class="gear-btn" id="btn-manual-gear" onclick="setTransmissionMode('manual')">دنده‌ای دستی (با Q و E)</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>تعداد دنده‌های گیربکس:</label>
+                        <span class="val-badge"><b id="val-numberOfGears">5</b> دنده</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('numberOfGears', -1)">−</button>
+                        <input type="range" id="numberOfGears" min="1" max="5" step="1" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('numberOfGears', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>شتاب اولیه موتور (Acceleration):</label>
+                        <span class="val-badge" id="val-engineAcceleration">0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('engineAcceleration', -0.5)">−</button>
+                        <input type="range" id="engineAcceleration" min="5" max="90" step="0.5" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('engineAcceleration', 0.5)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>نهایت سرعت اسمی (Max Velocity):</label>
+                        <span class="val-badge"><b id="val-maxVelocity">0</b> km/h</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('maxVelocity', -5)">−</button>
+                        <input type="range" id="maxVelocity" min="100" max="480" step="1" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('maxVelocity', 5)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <label>نوع دیفرانسیل و چرخ محرک (Drive Type):</label>
+                    <select id="driveType" class="select-box">
+                        <option value="4">چهار چرخ متحرک (4WD / AWD)</option>
+                        <option value="r">دیفرانسیل عقب (RWD - شتاب و دریفت)</option>
+                        <option value="f">دیفرانسیل جلو (FWD)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- تب ۲: ترمز و فرمان -->
+            <div id="tab-brakes" class="tab-pane">
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>قدرت ترمزگیری (Brake Deceleration):</label>
+                        <span class="val-badge" id="val-brakeDeceleration">0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('brakeDeceleration', -0.5)">−</button>
+                        <input type="range" id="brakeDeceleration" min="2" max="35" step="0.5" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('brakeDeceleration', 0.5)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>تقسیم ترمز جلو/عقب (Brake Bias):</label>
+                        <span class="val-badge" id="val-brakeBias">0.5</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('brakeBias', -0.05)">−</button>
+                        <input type="range" id="brakeBias" min="0.0" max="1.0" step="0.05" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('brakeBias', 0.05)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>زاویه چرخش فرمان (Steering Lock):</label>
+                        <span class="val-badge"><b id="val-steeringLock">0</b>°</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('steeringLock', -1)">−</button>
+                        <input type="range" id="steeringLock" min="20" max="80" step="1" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('steeringLock', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>اصطکاک و چسبندگی تایرها (Traction):</label>
+                        <span class="val-badge" id="val-tractionMultiplier">0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('tractionMultiplier', -0.05)">−</button>
+                        <input type="range" id="tractionMultiplier" min="0.4" max="2.6" step="0.05" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('tractionMultiplier', 0.05)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۳: تعلیق، ارتفاع و دوام -->
+            <div id="tab-suspension" class="tab-pane">
+                <div class="input-card highlight-card">
+                    <div class="slider-header">
+                        <label>ضریب دوام در تصادف (۰ = کاملاً ضدضربه):</label>
+                        <span class="val-badge" id="val-collisionDamageMultiplier">1.0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('collisionDamageMultiplier', -0.05)">−</button>
+                        <input type="range" id="collisionDamageMultiplier" min="0.0" max="1.5" step="0.05" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('collisionDamageMultiplier', 0.05)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>ارتفاع کف خودرو (Lower Limit):</label>
+                        <span class="val-badge" id="val-suspensionLowerLimit">0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('suspensionLowerLimit', -0.01)">−</button>
+                        <input type="range" id="suspensionLowerLimit" min="-0.35" max="0.30" step="0.01" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('suspensionLowerLimit', 0.01)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>نرمی و نیروی کمک‌فنرها (Force Level):</label>
+                        <span class="val-badge" id="val-suspensionForceLevel">0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('suspensionForceLevel', -0.1)">−</button>
+                        <input type="range" id="suspensionForceLevel" min="0.4" max="4.0" step="0.1" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('suspensionForceLevel', 0.1)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>میزان بازی فنر و ضربه‌گیری (Damping):</label>
+                        <span class="val-badge" id="val-suspensionDamping">0</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('suspensionDamping', -0.01)">−</button>
+                        <input type="range" id="suspensionDamping" min="0.02" max="0.6" step="0.01" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('suspensionDamping', 0.01)">+</button>
+                    </div>
+                </div>
+
+                <div class="input-card">
+                    <div class="slider-header">
+                        <label>وزن خودرو (Mass):</label>
+                        <span class="val-badge"><b id="val-mass">0</b> kg</span>
+                    </div>
+                    <div class="slider-control">
+                        <button type="button" class="step-btn" onclick="stepSlider('mass', -50)">−</button>
+                        <input type="range" id="mass" min="600" max="4500" step="20" oninput="updateVal(this)">
+                        <button type="button" class="step-btn" onclick="stepSlider('mass', 50)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۴: رنگ و رقص نور -->
+            <div id="tab-paint" class="tab-pane">
+                <div class="dynamic-light-box">
+                    <h3 class="box-title">✨ رقص نور و رنگ‌های متحرک خودرو</h3>
+                    <div class="dynamic-grid">
+                        <div class="input-card">
+                            <label>طرح و الگوی چرخش رنگ:</label>
+                            <select id="animPattern" class="select-box" onchange="updateDynamicLighting()">
+                                <option value="none">⏸️ خاموش / حالت رنگ ثابت</option>
+                                <option value="police">🚨 پلیسی چشمک‌زن (Red & Blue Strobe)</option>
+                                <option value="rainbow">🌈 آر جی بی رنگین‌کمانی (RGB Chroma)</option>
+                                <option value="relax">🌊 آرامش‌بخش ملایم (Breathe & Pulse)</option>
+                                <option value="cyberpunk">⚡ سایبرپانک نئونی (Pink & Cyan)</option>
+                                <option value="fire">🔥 آتشین و مسابقه‌ای (Fire Burst)</option>
+                            </select>
+                        </div>
+                        <div class="input-card">
+                            <label>اعمال روی کدام بخش‌ها:</label>
+                            <select id="animTarget" class="select-box" onchange="updateDynamicLighting()">
+                                <option value="lights">💡 فقط چراغ‌های جلو</option>
+                                <option value="body">🚗 فقط رنگ بدنه خودرو</option>
+                                <option value="both">🌟 هم بدنه و هم چراغ‌ها</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="input-card" style="margin-top: 8px;">
+                        <div class="slider-header">
+                            <label>سرعت چرخش رقص نور:</label>
+                            <span class="val-badge"><b id="val-animSpeed">1.0</b>x</span>
+                        </div>
+                        <div class="slider-control">
+                            <button type="button" class="step-btn" onclick="stepSlider('animSpeed', -0.1)">−</button>
+                            <input type="range" id="animSpeed" min="0.2" max="3.5" step="0.1" value="1.0" oninput="updateSpeedVal(this)" onchange="updateDynamicLighting()">
+                            <button type="button" class="step-btn" onclick="stepSlider('animSpeed', 0.1)">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="colors-grid" style="margin-top: 10px;">
+                    <div class="color-picker-box">
+                        <label>رنگ اصلی بدنه (Color 1)</label>
+                        <input type="color" id="primaryColor" onchange="updateStaticColors()">
+                    </div>
+                    <div class="color-picker-box">
+                        <label>رنگ مکمل بدنه (Color 2)</label>
+                        <input type="color" id="secondaryColor" onchange="updateStaticColors()">
+                    </div>
+                    <div class="color-picker-box" style="grid-column: span 2;">
+                        <label>نور ثابت چراغ‌های جلو (Headlight Glow)</label>
+                        <input type="color" id="headlightColor" onchange="updateStaticColors()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- تب ۵: پروفایل‌ها -->
+            <div id="tab-presets" class="tab-pane">
+                <h4 class="section-title">حالت‌های تنظیم آماده</h4>
+                <div class="presets-grid">
+                    <button class="preset-btn drift" onclick="applyPreset('drift')">🔥 مود دریفت حرفه‌ای</button>
+                    <button class="preset-btn drag" onclick="applyPreset('drag')">⚡ مود درگ و شتاب</button>
+                    <button class="preset-btn offroad" onclick="applyPreset('offroad')">🏔️ مود آفرود شوتی</button>
+                    <button class="preset-btn armored" onclick="applyPreset('armored')">🛡️ مود تانک و ضدضربه</button>
+                </div>
+
+                <h4 class="section-title" style="margin-top: 18px;">ذخیره پروفایل شخصی</h4>
+                <div class="save-profile-box">
+                    <input type="text" id="new-profile-name" placeholder="نام پروفایل..." />
+                    <button class="btn btn-primary" onclick="saveNewProfile()">ذخیره</button>
+                </div>
+
+                <div id="custom-profiles-list" class="custom-profiles"></div>
+            </div>
+
+        </div>
+
+        <!-- فوتر -->
+        <div class="panel-footer">
+            <button class="btn btn-secondary" onclick="resetToStock()">🔄 فابریک کارخانه</button>
+            <button class="btn btn-success" onclick="saveAllSettings()">💾 ثبت و ذخیره دائمی روی خودرو</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

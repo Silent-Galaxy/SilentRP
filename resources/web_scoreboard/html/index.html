@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="panel-container">
+        <!-- کادر وضعیت شهردار -->
+        <div class="mayor-strip" id="mayorBox">
+            <span class="mayor-text" id="mayorStatus">در حال بررسی وضعیت شهردار...</span>
+        </div>
+
+        <!-- آمار ارگان‌ها و سرور -->
+        <div class="stats-row">
+            <div class="stat-item">👮‍♂️ پلیس: <b id="policeCount">0</b></div>
+            <div class="stat-item">🚑 امداد: <b id="medicCount">0</b></div>
+            <div class="stat-item">🔧 مکانیک: <b id="mechCount">0</b></div>
+            <div class="stat-item">🛡️ ادمین: <b id="staffCount">0</b> <small>(🤖 <span id="botCount">0</span>)</small></div>
+            <div class="stat-item online-pill">آنلاین: <b id="onlineCount">0</b>/<span id="maxCount">128</span></div>
+        </div>
+
+        <!-- جدول بازیکنان -->
+        <div class="table-container" id="scrollContainer">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">#آیدی</th>
+                        <th style="width: 44%;">نام شهروند</th>
+                        <th style="width: 24%;">شغل / مقام</th>
+                        <th style="width: 12%;">وضعیت</th>
+                        <th style="width: 10%;">پینگ</th>
+                    </tr>
+                </thead>
+                <tbody id="playerRows">
+                    <!-- ردیف‌ها -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

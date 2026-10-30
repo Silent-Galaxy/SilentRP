@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Aurora Auth</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+        input { user-select: text !important; cursor: text !important; pointer-events: auto !important; }
+        button, .tab-btn, .toggle-pwd, .forgot-link { cursor: pointer !important; pointer-events: auto !important; }
+        body { background: #090d16; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #090e1a; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+        .card { width: 440px; padding: 26px 24px; background: #111827; border-radius: 18px; border: 1px solid #1f2937; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8); position: relative; z-index: 10; }
+        .title { text-align: center; font-size: 22px; font-weight: 800; color: #818cf8; }
+        .subtitle { text-align: center; color: #6b7280; font-size: 11px; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 2px; }
+        .tabs { display: flex; background: #0b0f19; border-radius: 10px; padding: 4px; margin-bottom: 14px; border: 1px solid #1f2937; }
+        .tab-btn { flex: 1; padding: 8px; text-align: center; background: transparent; border: none; color: #9ca3af; font-weight: 600; font-size: 12px; border-radius: 8px; }
+        .tab-btn.active { background: #4f46e5; color: #ffffff; }
+        .input-group { margin-bottom: 10px; text-align: left; }
+        .input-group label { display: block; color: #9ca3af; font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        .input-wrapper input { width: 100%; padding: 10px 36px 10px 12px; background: #1f2937; border: 1px solid #374151; border-radius: 8px; color: #ffffff; font-size: 13px; outline: none; }
+        .input-wrapper input:focus { border-color: #6366f1; background: #252f41; }
+        .toggle-pwd { position: absolute; right: 10px; color: #9ca3af; font-size: 14px; }
+        .pwd-strength-box { margin-top: 8px; padding: 10px; background: #0d131f; border: 1px solid #1e293b; border-radius: 8px; display: none; direction: rtl; text-align: right; }
+        .strength-bar-bg { height: 5px; background: #1f2937; border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+        .strength-bar-fill { height: 100%; width: 0%; transition: width 0.3s ease, background 0.3s ease; }
+        .pwd-tip { font-size: 11px; font-weight: 600; color: #38bdf8; margin-bottom: 7px; background: rgba(56, 189, 248, 0.1); padding: 5px 8px; border-radius: 5px; border-right: 3px solid #38bdf8; }
+        .pwd-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 10.5px; }
+        .rule-item { color: #f87171; transition: color 0.2s ease; }
+        .rule-item.valid { color: #4ade80; font-weight: 700; }
+        .row-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; color: #9ca3af; }
+        .checkbox-container { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .forgot-link { color: #818cf8; text-decoration: none; }
+        .submit-btn { width: 100%; padding: 11px; background: #4f46e5; border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 13px; }
+        .submit-btn:hover { background: #4338ca; }
+        .status-msg { min-height: 18px; text-align: center; font-size: 12px; font-weight: 600; margin-top: 10px; }
+        .status-error { color: #f87171; }
+        .status-success { color: #4ade80; }
+        .status-info { color: #9ca3af; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1 class="title">AURORA CITY</h1>
+        <p class="subtitle">Gateway System</p>
+
+        <div class="tabs">
+            <button class="tab-btn active" id="tabLogin" onclick="setMode('login')">ورود</button>
+            <button class="tab-btn" id="tabRegister" onclick="setMode('register')">ثبت نام</button>
+        </div>
+
+        <div class="input-group">
+            <label>نام کاربری</label>
+            <div class="input-wrapper"><input type="text" id="username" placeholder="Username" autocomplete="off" autofocus></div>
+        </div>
+
+        <div class="input-group" id="groupEmail" style="display: none;">
+            <label>آدرس ایمیل</label>
+            <div class="input-wrapper"><input type="email" id="email" placeholder="user@example.com" autocomplete="off"></div>
+        </div>
+
+        <div class="input-group" id="groupPhone" style="display: none;">
+            <label>شماره تماس</label>
+            <div class="input-wrapper"><input type="text" id="phone" placeholder="09123456789" autocomplete="off"></div>
+        </div>
+
+        <div class="input-group">
+            <label id="lblPassword">رمز عبور</label>
+            <div class="input-wrapper">
+                <input type="password" id="password" placeholder="••••••••" autocomplete="off" oninput="checkPasswordStrength(this.value)">
+                <span class="toggle-pwd" onclick="togglePasswordVisibility('password')">👁️</span>
+            </div>
+
+            <div class="pwd-strength-box" id="pwdStrengthBox">
+                <div class="strength-bar-bg"><div class="strength-bar-fill" id="strengthFill"></div></div>
+                <div class="pwd-tip" id="pwdDynamicTip">💡 راهنما: برای امنیت، علامت‌هایی مثل (@ # $ % !) بگذارید.</div>
+                <div class="pwd-rules">
+                    <span class="rule-item" id="ruleLength">✕ حداقل ۸ نویسه</span>
+                    <span class="rule-item" id="ruleCases">✕ حروف بزرگ و کوچک</span>
+                    <span class="rule-item" id="ruleNumber">✕ حداقل یک عدد (0-9)</span>
+                    <span class="rule-item" id="ruleSpecial">✕ علامت خاص (@ # $ %)</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-options" id="rowOptions">
+            <label class="checkbox-container">
+                <input type="checkbox" id="chkRemember" checked>
+                <span>مرا به خاطر بسپار</span>
+            </label>
+            <span class="forgot-link" id="linkForgot" onclick="setMode('forgot')">فراموشی رمز؟</span>
+        </div>
+
+        <div class="input-group" id="groupReferral" style="display: none;">
+            <label>کد رفرال / معرف (اختیاری)</label>
+            <div class="input-wrapper"><input type="text" id="referral" placeholder="نام معرف..." autocomplete="off"></div>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitAuth()">ورود به سرور</button>
+        <div class="status-msg status-info" id="statusMsg"></div>
+    </div>
+
+    <script>
+        let currentMode = "login";
+        let autoLoginTimer = null;
+
+        function emitMTA(event, ...args) {
+            if (typeof mta !== "undefined" && mta.triggerEvent) {
+                mta.triggerEvent(event, ...args);
+                return true;
+            }
+            return false;
+        }
+
+        function isValidEmail(email) {
+            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(String(email).toLowerCase());
+        }
+
+        function togglePasswordVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === "password" ? "text" : "password";
+            input.focus();
+        }
+
+        function checkPasswordStrength(val) {
+            if (currentMode !== "register") {
+                document.getElementById("pwdStrengthBox").style.display = "none";
+                return;
+            }
+            document.getElementById("pwdStrengthBox").style.display = "block";
+
+            const hasLen = val.length >= 8;
+            const hasCases = /[a-z]/.test(val) && /[A-Z]/.test(val);
+            const hasNum = /[0-9]/.test(val);
+            const hasSpec = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(val);
+
+            updateRule("ruleLength", hasLen, "حداقل ۸ نویسه");
+            updateRule("ruleCases", hasCases, "حروف بزرگ و کوچک");
+            updateRule("ruleNumber", hasNum, "حداقل یک عدد (0-9)");
+            updateRule("ruleSpecial", hasSpec, "علامت خاص (@ # $ %)");
+
+            const tip = document.getElementById("pwdDynamicTip");
+            if (!hasLen) { tip.innerText = "💡 طول رمز کوتاه است (حداقل ۸ کاراکتر وارد کنید)."; tip.style.color = "#f87171"; }
+            else if (!hasCases) { tip.innerText = "💡 از ترکیب حروف کوچک و بزرگ انگلیسی استفاده کنید (aA)."; tip.style.color = "#fbbf24"; }
+            else if (!hasNum) { tip.innerText = "💡 حداقل یک عدد انگلیسی (0-9) به رمز اضافه کنید."; tip.style.color = "#fbbf24"; }
+            else if (!hasSpec) { tip.innerText = "💡 علامت بگذارید تو رمز مثل: @ # $ % ! & *"; tip.style.color = "#38bdf8"; }
+            else { tip.innerText = "🎉 عالی! رمز عبور شما بسیار قوی و مورد تایید است."; tip.style.color = "#4ade80"; }
+
+            let score = (hasLen ? 1 : 0) + (hasCases ? 1 : 0) + (hasNum ? 1 : 0) + (hasSpec ? 1 : 0);
+            const fill = document.getElementById("strengthFill");
+            fill.style.width = (score * 25) + "%";
+            if (score <= 1) fill.style.background = "#ef4444";
+            else if (score === 2) fill.style.background = "#f59e0b";
+            else if (score === 3) fill.style.background = "#38bdf8";
+            else fill.style.background = "#22c55e";
+        }
+
+        function updateRule(elId, valid, text) {
+            const el = document.getElementById(elId);
+            el.className = "rule-item " + (valid ? "valid" : "");
+            el.innerText = (valid ? "✓ " : "✕ ") + text;
+        }
+
+        function tryAutoLogin() {
+            const savedUser = localStorage.getItem("auth_username");
+            const savedToken = localStorage.getItem("auth_remember_token");
+            if (savedUser) document.getElementById("username").value = savedUser;
+
+            if (savedUser && savedToken) {
+                setStatus("در حال بررسی نشست قبلی...", "info");
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    const ok = emitMTA("auth:clientAutoLogin", savedUser, savedToken);
+                    if (ok || attempts >= 15) clearInterval(interval);
+                }, 150);
+
+                autoLoginTimer = setTimeout(() => {
+                    localStorage.removeItem("auth_remember_token");
+                    clearStatus();
+                }, 4000);
+            }
+        }
+
+        window.onload = function() {
+            tryAutoLogin();
+            document.querySelectorAll("input").forEach(input => {
+                input.addEventListener("click", function() { this.focus(); });
+            });
+        };
+
+        function setMode(mode) {
+            currentMode = mode;
+            if (autoLoginTimer) { clearTimeout(autoLoginTimer); autoLoginTimer = null; }
+            clearStatus();
+
+            document.getElementById("groupEmail").style.display = (mode === 'login') ? 'none' : 'block';
+            document.getElementById("groupPhone").style.display = (mode === 'register') ? 'block' : 'none';
+            document.getElementById("groupReferral").style.display = (mode === 'register') ? 'block' : 'none';
+            document.getElementById("rowOptions").style.display = (mode === 'register') ? 'none' : 'flex';
+
+            document.getElementById("tabLogin").className = "tab-btn " + (mode === 'login' ? 'active' : '');
+            document.getElementById("tabRegister").className = "tab-btn " + (mode === 'register' ? 'active' : '');
+            document.getElementById("submitBtn").innerText = mode === 'login' ? "ورود به سرور" : (mode === 'register' ? "ایجاد حساب کاربری" : "تغییر رمز عبور");
+
+            if (mode === 'register') checkPasswordStrength(document.getElementById("password").value);
+            else document.getElementById("pwdStrengthBox").style.display = "none";
+        }
+
+        function setStatus(text, type) {
+            const el = document.getElementById("statusMsg");
+            el.innerText = text;
+            el.className = "status-msg status-" + type;
+        }
+
+        function clearStatus() { setStatus("", "info"); }
+
+        function submitAuth() {
+            if (autoLoginTimer) { clearTimeout(autoLoginTimer); autoLoginTimer = null; }
+
+            const user = document.getElementById("username").value.trim();
+            const pass = document.getElementById("password").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const phone = document.getElementById("phone").value.trim();
+            const referral = document.getElementById("referral").value.trim();
+            const rememberMe = document.getElementById("chkRemember").checked;
+
+            if (user.length < 3) { setStatus("نام کاربری حداقل ۳ کاراکتر!", "error"); return; }
+            if (currentMode === "login" && pass.length === 0) { setStatus("لطفاً رمز عبور را وارد کنید!", "error"); return; }
+
+            if (currentMode === "register") {
+                if (!isValidEmail(email)) { setStatus("لطفاً یک ایمیل معتبر وارد کنید!", "error"); return; }
+                if (phone.length < 10) { setStatus("شماره تماس نامعتبر است!", "error"); return; }
+                if (pass.length < 8) { setStatus("رمز عبور باید حداقل ۸ کاراکتر باشد!", "error"); return; }
+                if (!(/[a-z]/.test(pass) && /[A-Z]/.test(pass))) { setStatus("رمز باید شامل حروف کوچک و بزرگ باشد!", "error"); return; }
+                if (!/[0-9]/.test(pass)) { setStatus("رمز عبور باید حداقل شامل یک عدد باشد!", "error"); return; }
+                if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(pass)) { setStatus("لطفاً در رمز علامت بگذارید مثل: @ # $ % ! &", "error"); return; }
+            }
+
+            setStatus("در حال برقراری ارتباط...", "info");
+            emitMTA("auth:clientSubmit", user, pass, currentMode, email, phone, referral, rememberMe);
+        }
+
+        function showResponse(success, message, token, username) {
+            if (autoLoginTimer) { clearTimeout(autoLoginTimer); autoLoginTimer = null; }
+            if (success) {
+                setStatus(message, "success");
+                if (token && username) {
+                    localStorage.setItem("auth_remember_token", token);
+                    localStorage.setItem("auth_username", username);
+                }
+            } else {
+                localStorage.removeItem("auth_remember_token");
+                setStatus(message, "error");
+            }
+        }
+    </script>
+</body>
+</html>

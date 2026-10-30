@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مدیریت خودروهای سرور</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+        body { background: transparent; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .container {
+            width: 720px; height: 540px; background: rgba(14, 18, 30, 0.97);
+            backdrop-filter: blur(15px); border-radius: 14px;
+            border: 1px solid rgba(0, 255, 204, 0.35);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.15);
+            display: flex; flex-direction: column; color: #fff;
+        }
+        .header { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .header h2 { font-size: 15px; color: #00ffcc; }
+        .close-btn { background: #ff3366; border: none; color: #fff; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+        .current-car-box {
+            margin: 10px 20px 0 20px; padding: 10px 15px;
+            background: rgba(0, 255, 204, 0.05); border: 1px dashed rgba(0, 255, 204, 0.3);
+            border-radius: 8px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .current-car-info { font-size: 12px; }
+        .btn-park-now {
+            background: #00ffcc; border: none; color: #000; font-weight: bold;
+            padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px;
+        }
+
+        .tabs { display: flex; gap: 8px; padding: 10px 20px; align-items: center; justify-content: space-between; }
+        .tab-group { display: flex; gap: 8px; }
+        .tab { padding: 6px 14px; background: rgba(255,255,255,0.05); border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .tab.active { background: #00ffcc; color: #111; font-weight: bold; }
+        .btn-refresh { background: rgba(255,255,255,0.1); border: none; color: #00ffcc; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+        .content { flex: 1; overflow-y: auto; padding: 5px 20px 15px 20px; }
+        .tab-panel { display: none; height: 100%; }
+        .tab-panel.active { display: block; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        thead { position: sticky; top: 0; background: #0e121e; }
+        th, td { padding: 8px 6px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: #8892b0; font-size: 11px; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+
+        .btn { border: none; padding: 4px 7px; border-radius: 5px; font-size: 11px; cursor: pointer; margin: 1px; color: #fff; }
+        .btn-marker { background: #06b6d4; }
+        .btn-teleport { background: #3b82f6; }
+        .btn-reset { background: #f59e0b; }
+        .btn-delete { background: #ef4444; }
+
+        .spawn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .spawn-card { background: rgba(255,255,255,0.04); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .btn-spawn { background: #00ffcc; color: #111; font-weight: bold; border: none; padding: 4px 10px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>مدیریت هوشمند وسایل نقلیه</h2>
+            <button class="close-btn" onclick="triggerMTA('onWebClose')">✕</button>
+        </div>
+
+        <div class="current-car-box" id="current-car-box">
+            <div class="current-car-info" id="current-car-text">در حال بررسی موقعیت شما...</div>
+            <button class="btn-park-now" id="btn-park-now" style="display:none;" onclick="triggerMTA('onWebSaveCurrentCar')">📌 ثبت موقعیت پارک</button>
+        </div>
+
+        <div class="tabs">
+            <div class="tab-group">
+                <div class="tab active" onclick="switchTab('saved')">ماشین‌های فعال دیتابیس (<span id="car-count">0</span>)</div>
+                <div class="tab" onclick="switchTab('spawn')">اسپاون ماشین جدید</div>
+            </div>
+            <button class="btn-refresh" onclick="triggerMTA('onWebRefreshList')">🔄 بروزرسانی لیست</button>
+        </div>
+
+        <div class="content">
+            <div id="tab-saved" class="tab-panel active">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>نام خودرو</th>
+                            <th>زمان ثبت</th>
+                            <th>آخرین بروزرسانی</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="saved-cars-tbody">
+                        <tr><td colspan="5">در حال دریافت خودروها از دیتابیس...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-spawn" class="tab-panel">
+                <div class="spawn-grid" id="spawn-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const vehicleNames = {
+            445: "پژو / Admiral", 416: "آمبولانس", 496: "Blista Compact", 422: "وانت Bobcat",
+            575: "Buccaneer", 431: "اتوبوس شهری", 438: "تاکسی Cabbie", 589: "Club",
+            437: "اتوبوس بین‌شهری", 596: "پلیس لوس سانتوس", 599: "پلیس رنجر", 598: "پلیس لاس ونتوراس",
+            578: "کامیون DFT-30", 419: "Esperanto", 492: "Greenwood", 400: "شاسی Landstalker",
+            517: "Majestic", 522: "موتور NRG-500", 467: "Oceanic", 461: "موتور PCJ-600",
+            600: "وانت پیکان", 436: "Previon", 547: "Primo", 405: "پراید / Sentinel",
+            561: "Stratum", 506: "سوپراسپرت Super GT", 420: "تاکسی زرد", 531: "تراکتور"
+        };
+
+        function triggerMTA(eventName, ...args) {
+            if (window.mta) { mta.triggerEvent(eventName, ...args); }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        const spawnContainer = document.getElementById('spawn-list');
+        for (const [id, name] of Object.entries(vehicleNames)) {
+            spawnContainer.innerHTML += `
+                <div class="spawn-card">
+                    <span>${name}</span>
+                    <button class="btn-spawn" onclick="triggerMTA('onWebSpawnNew', ${id})">اسپاون</button>
+                </div>
+            `;
+        }
+
+        function updatePanelData(cars, currentCar) {
+            if (Array.isArray(cars) && cars.length === 1 && Array.isArray(cars[0])) {
+                cars = cars[0];
+            }
+            if (Array.isArray(currentCar) && currentCar.length > 0) {
+                currentCar = currentCar[0];
+            }
+
+            const carText = document.getElementById('current-car-text');
+            const parkBtn = document.getElementById('btn-park-now');
+
+            if (currentCar && currentCar.model) {
+                const name = vehicleNames[currentCar.model] || ("ID: " + currentCar.model);
+                if (currentCar.dbid) {
+                    carText.innerHTML = `سوار <b>${name}</b> هستید (<span style="color:#00ffcc">شناسه دیتابیس #${currentCar.dbid}</span>)`;
+                    parkBtn.innerHTML = "📌 بروزرسانی مکان پارک به همین‌جا";
+                } else {
+                    carText.innerHTML = `سوار <b>${name}</b> هستید (<span style="color:#f59e0b">موقت - هنوز ثبت نشده</span>)`;
+                    parkBtn.innerHTML = "💾 ثبت دائمی خودرو در همین نقطه";
+                }
+                parkBtn.style.display = "block";
+            } else {
+                carText.innerHTML = "در حال حاضر پیاده هستید. (سوار هر ماشینی شوید می‌توانید موقعیت آن را ست کنید)";
+                parkBtn.style.display = "none";
+            }
+
+            const tbody = document.getElementById('saved-cars-tbody');
+            tbody.innerHTML = '';
+            document.getElementById('car-count').innerText = cars ? cars.length : 0;
+
+            if (!cars || cars.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">هیچ ماشینی در دیتابیس ثبت نشده است.</td></tr>';
+                return;
+            }
+
+            cars.forEach(car => {
+                const name = vehicleNames[car.model] || ("مدل " + car.model);
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:bold; color:#00ffcc;">#${car.dbid}</td>
+                        <td>${name}</td>
+                        <td style="color:#94a3b8; font-size:11px;">${car.created_at}</td>
+                        <td style="color:#f59e0b; font-size:11px;">${car.updated_at}</td>
+                        <td>
+                            <button class="btn btn-marker" title="فلش روی سقف و علامت نقشه" onclick="triggerMTA('onWebToggleMarker', ${car.dbid})">🎯 فلش</button>
+                            <button class="btn btn-teleport" title="رفتن به ماشین" onclick="triggerMTA('onWebTeleport', ${car.dbid})">🚀 تلپورت</button>
+                            <button class="btn btn-reset" title="برگرداندن به مکان پارک اولیه" onclick="triggerMTA('onWebResetPos', ${car.dbid})">🔄 ریست</button>
+                            <button class="btn btn-delete" title="حذف کامل از دیتابیس" onclick="triggerMTA('onWebDelete', ${car.dbid})">🗑️ حذف</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            triggerMTA('onWebReady');
+        });
+    </script>
+</body>
+</html>

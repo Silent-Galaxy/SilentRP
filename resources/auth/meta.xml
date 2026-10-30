@@ -1,0 +1,21 @@
+﻿<meta>
+    <info author="Aurora Dev Team" type="script" name="Aurora Auth System" version="4.1.0" />
+    <oop>false</oop>
+
+    <!-- هسته و تنظیمات -->
+    <script src="config.lua" type="shared" />
+    <script src="core/db.lua" type="server" />
+    <script src="core/security.lua" type="server" />
+
+    <!-- ماژول حساب و احراز هویت -->
+    <script src="modules/account/server_auth.lua" type="server" />
+    <script src="modules/account/client_auth.lua" type="client" />
+
+    <!-- ماژول پنل کاربری و مدیریت -->
+    <script src="modules/panel/server_panel.lua" type="server" />
+    <script src="modules/panel/client_panel.lua" type="client" />
+
+    <!-- فرانت‌اند -->
+    <file src="ui/index.html" />
+    <file src="ui/panel.html" />
+</meta>

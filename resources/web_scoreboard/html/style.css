@@ -1,0 +1,175 @@
+﻿* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+}
+
+body.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* پنل دارک گلس بسیار سبک و روان */
+.panel-container {
+    width: 690px;
+    height: 520px;
+    background: #0d121cd9;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
+    gap: 10px;
+    color: #f1f5f9;
+}
+
+/* نوار وضعیت شهردار */
+.mayor-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.mayor-strip.online {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+}
+
+.mayor-strip.offline {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #f87171;
+}
+
+/* آمار */
+.stats-row {
+    display: flex;
+    gap: 8px;
+}
+
+.stat-item {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #cbd5e1;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.stat-item b {
+    color: #fff;
+}
+
+.stat-item.online-pill {
+    background: rgba(56, 189, 248, 0.12);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+}
+
+/* بخش جدول همراه با اسکرولبار نرم */
+.table-container {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+.table-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+}
+
+th {
+    background: #141b27;
+    color: #94a3b8;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+td {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+tr.mayor-row {
+    background: rgba(245, 158, 11, 0.12) !important;
+}
+
+tr.mayor-row td.pname {
+    color: #fbbf24;
+    font-weight: 800;
+}
+
+/* وضعیت خدمت */
+.duty-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.duty-on {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.15);
+}
+
+.duty-off {
+    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.1);
+}
+
+/* پینگ */
+.ping-fast { color: #10b981; }
+.ping-med { color: #f59e0b; }
+.ping-slow { color: #ef4444; }

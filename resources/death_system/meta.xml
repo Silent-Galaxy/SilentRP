@@ -1,0 +1,5 @@
+<meta>
+    <info author="MTA Developer" name="Medical System Phase 1" version="4.0.0" type="script" />
+    <script src="server.lua" type="server" />
+    <script src="client.lua" type="client" />
+</meta>

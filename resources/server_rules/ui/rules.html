@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Rules</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+        body { background: rgba(0, 0, 0, 0.75); height: 100vh; width: 100vw; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        input, textarea { user-select: text !important; cursor: text !important; }
+        button { cursor: pointer; }
+
+        .panel-container { width: 860px; height: 600px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85); display: flex; flex-direction: column; overflow: hidden; }
+        .panel-header { background: #1e293b; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .header-title { font-size: 16px; font-weight: 800; color: #f8fafc; }
+        .badge-active { background: #0284c7; color: #fff; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+
+        .panel-body { display: flex; flex: 1; overflow: hidden; }
+
+        .archive-sidebar { width: 250px; background: #090e1a; border-left: 1px solid #1e293b; display: flex; flex-direction: column; }
+        .sidebar-title { padding: 12px 14px; font-size: 12px; font-weight: 700; color: #94a3b8; border-bottom: 1px solid #1e293b; background: #0e1526; display: flex; justify-content: space-between; align-items: center; }
+        .btn-new-tab { background: #10b981; color: #fff; border: none; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 4px; }
+        .version-list { flex: 1; overflow-y: auto; padding: 6px; }
+        .version-item { padding: 10px 12px; margin-bottom: 4px; background: #131d31; border: 1px solid transparent; border-radius: 6px; cursor: pointer; }
+        .version-item:hover { background: #1e293b; }
+        .version-item.active { background: #0284c7; border-color: #38bdf8; }
+        .version-item.editing { background: #4338ca; border-color: #818cf8; }
+        .version-item-title { font-size: 12.5px; font-weight: 700; color: #f8fafc; margin-bottom: 2px; }
+        .version-item-sub { font-size: 10.5px; color: #94a3b8; }
+        .version-item.active .version-item-sub, .version-item.editing .version-item-sub { color: #e0f2fe; }
+
+        .content-area { flex: 1; display: flex; flex-direction: column; padding: 16px 20px; background: #0b1120; overflow: hidden; }
+        .legal-notice { background: rgba(245, 158, 11, 0.1); border-right: 3px solid #f59e0b; border-radius: 6px; padding: 8px 12px; margin-bottom: 10px; font-size: 11.5px; line-height: 1.5; color: #fde68a; }
+        .rules-text-box { flex: 1; background: #050811; border: 1px solid #1e293b; border-radius: 8px; padding: 14px; overflow-y: auto; color: #e2e8f0; font-size: 13.5px; line-height: 2; white-space: pre-wrap; user-select: text; }
+        .meta-footer { display: flex; justify-content: space-between; font-size: 11px; color: #64748b; padding: 8px 2px; }
+
+        .admin-form { flex: 1; display: flex; flex-direction: column; padding: 16px 20px; background: #0b1120; gap: 10px; overflow-y: auto; }
+        .editor-status-bar { background: #1e1b4b; border: 1px solid #4338ca; border-radius: 6px; padding: 8px 12px; color: #c7d2fe; font-size: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; text-align: right; }
+        .form-group label { font-size: 12px; font-weight: 600; color: #cbd5e1; }
+        .form-group input, .form-group textarea { background: #050811; border: 1px solid #334155; border-radius: 6px; padding: 9px 12px; color: #fff; font-size: 13px; outline: none; }
+        .form-group textarea { height: 220px; resize: none; line-height: 1.8; }
+        .form-check { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #38bdf8; cursor: pointer; margin-top: 4px; }
+        .form-check input { width: 16px; height: 16px; cursor: pointer; }
+
+        .panel-footer { background: #090e1a; padding: 12px 20px; display: flex; gap: 10px; border-top: 1px solid #1e293b; }
+        .btn { padding: 10px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 700; border: none; }
+        .btn:hover { opacity: 0.9; }
+        .btn-close { background: #334155; color: #fff; }
+        .btn-admin { background: #e11d48; color: #fff; }
+        .btn-update-existing { background: #2563eb; color: #fff; }
+        .btn-publish-new { background: #16a34a; color: #fff; }
+        .btn-delete { background: #991b1b; color: #fff; }
+        .btn-accept { background: #15803d; color: #fff; margin-right: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="panel-container">
+        <div class="panel-header">
+            <span class="header-title" id="uiHeaderTitle">مرکز قوانین و مقررات سرور</span>
+            <span class="badge-active" id="uiBadgeVersion">نسخه فعال</span>
+        </div>
+
+        <div class="panel-body" id="viewModeCard">
+            <div class="archive-sidebar">
+                <div class="sidebar-title">📚 آرشیو کامل نسخه‌ها:</div>
+                <div class="version-list" id="versionListContainer"></div>
+            </div>
+            <div class="content-area">
+                <div class="legal-notice">
+                    ⚖️ <strong>تذکر:</strong> حضور در سرور به منزله مطالعه و پذیرش تمامی قوانین است.
+                </div>
+                <div class="rules-text-box" id="rulesTextBox">در حال بارگذاری قوانین...</div>
+                <div class="meta-footer">
+                    <span id="uiAuthor">✍️ نویسنده: -</span>
+                    <span id="uiDate">📅 تاریخ انتشار: -</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-body" id="adminModeCard" style="display: none;">
+            <div class="archive-sidebar">
+                <div class="sidebar-title">
+                    <span>🗂️ مدیریت نسخه‌ها:</span>
+                    <button class="btn-new-tab" onclick="createNewDraft()">➕ نسخه جدید</button>
+                </div>
+                <div class="version-list" id="adminVersionList"></div>
+            </div>
+
+            <div class="admin-form">
+                <div class="editor-status-bar">
+                    <span id="adminEditorModeLabel">در حال ویرایش نسخه</span>
+                    <span id="adminEditorIsActiveLabel" style="color: #4ade80;">[نسخه فعال]</span>
+                </div>
+
+                <div class="form-group">
+                    <label>عنوان قوانین:</label>
+                    <input type="text" id="adminTitleInput" placeholder="عنوان این نسخه...">
+                </div>
+
+                <div class="form-group" style="flex:1;">
+                    <label>متن کامل قوانین:</label>
+                    <textarea id="adminContentInput" placeholder="متن قوانین..."></textarea>
+                </div>
+
+                <label class="form-check" id="checkActiveContainer">
+                    <input type="checkbox" id="checkMakeActive">
+                    <span>تنظیم به عنوان نسخه فعال و جاری سرور</span>
+                </label>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            <button class="btn btn-close" onclick="closeUI()">بستن (Esc)</button>
+            <button class="btn btn-admin" id="btnAdminSwitch" style="display: none;" onclick="toggleAdminMode()">✏️ مدیریت و نگارش قوانین</button>
+
+            <button class="btn btn-update-existing" id="btnUpdateExisting" style="display: none;" onclick="submitUpdateExisting()">💾 ذخیره تغییرات همین نسخه</button>
+            <button class="btn btn-publish-new" id="btnPublishNew" style="display: none;" onclick="submitPublishNew()">🚀 انتشار به عنوان نسخه جدید</button>
+            <button class="btn btn-delete" id="btnDeleteVer" style="display: none;" onclick="submitDeleteVersion()">🗑️ حذف این نسخه</button>
+
+            <button class="btn btn-accept" id="btnAccept" style="display: none;" onclick="submitAccept()">قوانین را می‌پذیرم ✓</button>
+        </div>
+    </div>
+
+    <script>
+        let allRules = [];
+        let selectedVersion = null;
+        let adminTargetVersion = "new";
+        let isAdminUser = false;
+        let currentMode = "view";
+        let activeAction = "view";
+
+        function emit(event, ...args) {
+            if (typeof mta !== "undefined" && mta.triggerEvent) {
+                mta.triggerEvent(event, ...args);
+            }
+        }
+
+        function closeUI() {
+            emit("rules:clientCloseUI");
+        }
+
+        window.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") closeUI();
+        });
+
+        function hexToUtf8(hex) {
+            if (!hex) return "[]";
+            const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            return new TextDecoder("utf-8").decode(bytes);
+        }
+
+        function receiveRulesHex(mode, hexData, forAction, isAdmin) {
+            try {
+                let parsed = JSON.parse(hexToUtf8(hexData));
+                while (Array.isArray(parsed) && parsed.length === 1 && Array.isArray(parsed[0])) {
+                    parsed = parsed[0];
+                }
+                allRules = Array.isArray(parsed) ? parsed : [parsed];
+            } catch(e) {
+                allRules = [];
+            }
+
+            isAdminUser = !!isAdmin;
+            activeAction = forAction || "view";
+
+            const activeRule = allRules.find(r => r.is_active == 1 || r.is_active === true || r.is_active === "1") || allRules[0];
+            if (!selectedVersion && activeRule) {
+                selectedVersion = Number(activeRule.version);
+            }
+
+            if (isAdminUser) {
+                document.getElementById("btnAdminSwitch").style.display = "block";
+            } else {
+                document.getElementById("btnAdminSwitch").style.display = "none";
+            }
+
+            renderSidebar();
+            displayCurrentRule();
+
+            if (mode === "admin" && isAdminUser) {
+                setAdminMode(true);
+            } else {
+                setAdminMode(false);
+            }
+
+            const btnAccept = document.getElementById("btnAccept");
+            if (activeAction !== "view") {
+                btnAccept.style.display = "block";
+            } else {
+                btnAccept.style.display = "none";
+            }
+        }
+
+        function renderSidebar() {
+            const list = document.getElementById("versionListContainer");
+            const adminList = document.getElementById("adminVersionList");
+            list.innerHTML = "";
+            adminList.innerHTML = "";
+
+            allRules.forEach(r => {
+                const isActive = (r.is_active == 1 || r.is_active === true || r.is_active === "1");
+                const vNum = Number(r.version);
+
+                const item = document.createElement("div");
+                item.className = "version-item" + (vNum === selectedVersion ? " active" : "");
+                item.onclick = function() {
+                    selectedVersion = vNum;
+                    renderSidebar();
+                    displayCurrentRule();
+                };
+                item.innerHTML = `
+                    <div class="version-item-title">نسخه ${vNum} ${isActive ? '★ فعال' : ''}</div>
+                    <div class="version-item-sub">${r.title ? r.title.substring(0, 24) : 'قوانین'}</div>
+                `;
+                list.appendChild(item);
+
+                const aItem = document.createElement("div");
+                aItem.className = "version-item" + (adminTargetVersion === vNum ? " editing" : "");
+                aItem.onclick = function() {
+                    loadVersionIntoAdminEditor(vNum);
+                };
+                aItem.innerHTML = `
+                    <div class="version-item-title">نسخه ${vNum} ${isActive ? '★ (فعال)' : '(آرشیو)'}</div>
+                    <div class="version-item-sub">✏️ کلیک جهت ویرایش و ذخیره</div>
+                `;
+                adminList.appendChild(aItem);
+            });
+        }
+
+        function displayCurrentRule() {
+            const rule = allRules.find(r => Number(r.version) === selectedVersion) || allRules[0] || {};
+            const isActive = (rule.is_active == 1 || rule.is_active === true || rule.is_active === "1");
+
+            document.getElementById("uiHeaderTitle").innerText = rule.title || "قوانین سرور";
+            document.getElementById("uiBadgeVersion").innerText = "نسخه " + (rule.version || "1") + (isActive ? " (فعال جاری)" : " (آرشیو)");
+            document.getElementById("uiBadgeVersion").style.background = isActive ? "#0284c7" : "#475569";
+            document.getElementById("rulesTextBox").innerText = rule.content || "متنی برای این نسخه موجود نیست.";
+            document.getElementById("uiAuthor").innerText = "✍️ نگارش: " + (rule.created_by || "SilentGalaxy");
+            document.getElementById("uiDate").innerText = "📅 انتشار: " + (rule.created_at || "-");
+        }
+
+        function loadVersionIntoAdminEditor(verNum) {
+            adminTargetVersion = verNum;
+            renderSidebar();
+
+            const rule = allRules.find(r => Number(r.version) === verNum);
+            if (!rule) return;
+
+            const isActive = (rule.is_active == 1 || rule.is_active === true || rule.is_active === "1");
+            document.getElementById("adminEditorModeLabel").innerText = "در حال ویرایش نسخه " + verNum + " (موجود در دیتابیس)";
+            document.getElementById("adminEditorIsActiveLabel").innerText = isActive ? "[نسخه فعال جاری]" : "[آرشیو شده]";
+            document.getElementById("adminEditorIsActiveLabel").style.color = isActive ? "#4ade80" : "#94a3b8";
+
+            document.getElementById("adminTitleInput").value = rule.title || "";
+            document.getElementById("adminContentInput").value = rule.content || "";
+            document.getElementById("checkMakeActive").checked = isActive;
+
+            document.getElementById("btnUpdateExisting").style.display = "block";
+            document.getElementById("btnUpdateExisting").innerText = "💾 ذخیره تغییرات نسخه " + verNum;
+            document.getElementById("btnPublishNew").style.display = "block";
+            document.getElementById("btnPublishNew").innerText = "🚀 کپی و انتشار به عنوان نسخه جدید";
+            document.getElementById("btnDeleteVer").style.display = (allRules.length > 1) ? "block" : "none";
+        }
+
+        function createNewDraft() {
+            adminTargetVersion = "new";
+            renderSidebar();
+
+            const maxVer = allRules.reduce((max, r) => Math.max(max, Number(r.version) || 0), 0);
+            const nextVer = maxVer + 1;
+
+            document.getElementById("adminEditorModeLabel").innerText = "ایجاد نسخه جدید (نسخه " + nextVer + ")";
+            document.getElementById("adminEditorIsActiveLabel").innerText = "[پیش‌نویس جدید]";
+            document.getElementById("adminEditorIsActiveLabel").style.color = "#38bdf8";
+
+            document.getElementById("adminTitleInput").value = "";
+            document.getElementById("adminContentInput").value = "";
+            document.getElementById("checkMakeActive").checked = true;
+
+            document.getElementById("btnUpdateExisting").style.display = "none";
+            document.getElementById("btnDeleteVer").style.display = "none";
+            document.getElementById("btnPublishNew").style.display = "block";
+            document.getElementById("btnPublishNew").innerText = "🚀 انتشار نسخه " + nextVer;
+        }
+
+        function setAdminMode(isAdmin) {
+            currentMode = isAdmin ? "admin" : "view";
+            document.getElementById("viewModeCard").style.display = isAdmin ? "none" : "flex";
+            document.getElementById("adminModeCard").style.display = isAdmin ? "flex" : "none";
+            document.getElementById("btnAdminSwitch").innerText = isAdmin ? "👁️ مشاهده قوانین (F5)" : "✏️ مرکز مدیریت و نگارش قوانین";
+
+            if (isAdmin) {
+                const activeRule = allRules.find(r => r.is_active == 1 || r.is_active === true || r.is_active === "1") || allRules[0];
+                if (activeRule) {
+                    loadVersionIntoAdminEditor(Number(activeRule.version));
+                } else {
+                    createNewDraft();
+                }
+            } else {
+                document.getElementById("btnUpdateExisting").style.display = "none";
+                document.getElementById("btnPublishNew").style.display = "none";
+                document.getElementById("btnDeleteVer").style.display = "none";
+            }
+        }
+
+        function toggleAdminMode() {
+            setAdminMode(currentMode !== "admin");
+        }
+
+        function submitUpdateExisting() {
+            if (adminTargetVersion === "new") return;
+            const title = document.getElementById("adminTitleInput").value.trim();
+            const content = document.getElementById("adminContentInput").value.trim();
+            const makeActive = document.getElementById("checkMakeActive").checked;
+
+            if (!title || !content) {
+                alert("عنوان و متن نسخه نباید خالی باشند!");
+                return;
+            }
+            emit("rules:clientUpdateExistingAction", adminTargetVersion, title, content, makeActive);
+        }
+
+        function submitPublishNew() {
+            const title = document.getElementById("adminTitleInput").value.trim();
+            const content = document.getElementById("adminContentInput").value.trim();
+            if (!title || !content) {
+                alert("عنوان و متن نسخه نباید خالی باشند!");
+                return;
+            }
+            emit("rules:clientPublishAction", title, content);
+        }
+
+        function submitDeleteVersion() {
+            if (adminTargetVersion === "new") return;
+            if (!confirm("آیا از حذف دائم نسخه " + adminTargetVersion + " از دیتابیس مطمئن هستید؟")) return;
+            emit("rules:clientDeleteAction", adminTargetVersion);
+        }
+
+        function submitAccept() {
+            emit("rules:clientAcceptAction", selectedVersion, activeAction);
+        }
+    </script>
+</body>
+</html>

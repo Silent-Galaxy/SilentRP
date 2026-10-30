@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Circular HUD -->
+    <div id="hud-container" class="hidden">
+        <div class="indicators-bar">
+            <div id="ind-left" class="ind-arrow">◀ <small>Q</small></div>
+            <div id="ind-hazard" class="ind-hazard">⚠️ <small>CAPS</small></div>
+            <div id="ind-right" class="ind-arrow"><small>E</small> ▶</div>
+        </div>
+
+        <div class="gauge-wrapper">
+            <svg class="gauge-svg" viewBox="0 0 160 160">
+                <circle class="gauge-bg" cx="80" cy="80" r="70"></circle>
+                <circle id="gauge-progress" class="gauge-val" cx="80" cy="80" r="70"></circle>
+            </svg>
+            <div class="gauge-center">
+                <div id="gear-indicator" class="gear-tag">D</div>
+                <div id="speed-val" class="speed-num">0</div>
+                <div class="speed-unit">KM/H</div>
+            </div>
+        </div>
+
+        <div class="status-grid">
+            <div id="badge-engine" class="stat-badge" title="موتور [1]">🔑<small>1</small></div>
+            <div id="badge-lights" class="stat-badge" title="چراغ [2]">💡<small>2</small></div>
+            <div id="badge-handbrake" class="stat-badge" title="ترمز دستی [3]">🛑<small>3</small></div>
+            <div id="badge-seatbelt" class="stat-badge" title="کمربند [4]">💺<small>4</small></div>
+            <div id="badge-doors" class="stat-badge" title="وضعیت درب‌ها">🚪<small>درب</small></div>
+        </div>
+
+        <div id="panel-hint" class="hud-footer">پنل کنترل = F1</div>
+    </div>
+
+    <!-- F1 Vehicle Interactive Panel -->
+    <div id="control-panel" class="panel-hidden">
+        <div class="panel-header">
+            <span>⚙️ پنل مدیریت هوشمند خودرو</span>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+
+        <div class="car-diagram">
+            <button id="door-0" class="car-btn hood" onclick="toggleDoor(0)">کاپوت جلو 🚘</button>
+            <div class="door-row">
+                <button id="door-2" class="car-btn door" onclick="toggleDoor(2)">درب جلو چپ (راننده)</button>
+                <button id="door-3" class="car-btn door" onclick="toggleDoor(3)">درب جلو راست (شاگرد)</button>
+            </div>
+            <div class="door-row">
+                <button id="door-4" class="car-btn door" onclick="toggleDoor(4)">درب عقب چپ</button>
+                <button id="door-5" class="car-btn door" onclick="toggleDoor(5)">درب عقب راست</button>
+            </div>
+            <button id="door-1" class="car-btn trunk" onclick="toggleDoor(1)">صندوق عقب 🧳</button>
+            
+            <!-- Single Unified Toggle All Doors Button -->
+            <button class="car-btn toggle-all-btn" onclick="toggleAllDoors()">🚪 باز / بستن تمام درب‌ها</button>
+        </div>
+
+        <div class="quick-controls">
+            <button onclick="quickAction('engine')">🔑 موتور [1]</button>
+            <button onclick="quickAction('lights')">💡 چراغ [2]</button>
+            <button onclick="quickAction('handbrake')">🛑 ترمز دستی [3]</button>
+            <button onclick="quickAction('seatbelt')">💺 کمربند [4]</button>
+            <button onclick="quickAction('hazard')">⚠️ فلاشر [CAPS]</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+﻿<meta>
+    <info author="MTA Dev" type="script" name="veh_core" version="8.0.0" />
+    <script src="server.lua" type="server" />
+    <script src="client.lua" type="client" cache="false" />
+    <file src="html/index.html" />
+    <file src="html/style.css" />
+    <file src="html/script.js" />
+</meta>

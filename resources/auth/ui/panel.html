@@ -1,0 +1,458 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Aurora Control Panel (F2)</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; user-select: none; }
+        body { background: transparent; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: #090e1a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 4px; }
+        .panel-container { width: 1040px; height: 630px; background: #0f172a; border: 1px solid #334155; border-radius: 16px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95); display: flex; overflow: hidden; }
+        .sidebar { width: 250px; background: #090e1a; border-left: 1px solid #1e293b; display: flex; flex-direction: column; padding: 20px 14px; }
+        .brand-title { color: #818cf8; font-size: 18px; font-weight: 800; text-align: center; }
+        .brand-sub { color: #64748b; font-size: 11px; text-align: center; margin-bottom: 18px; }
+        .nav-btn { display: flex; align-items: center; padding: 10px 12px; border-radius: 8px; color: #94a3b8; background: transparent; border: none; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 5px; width: 100%; text-align: right; }
+        .nav-btn:hover { background: #1e293b; color: #fff; }
+        .nav-btn.active { background: #4f46e5; color: #fff; }
+        .admin-nav { margin-top: auto; border-top: 1px dashed #334155; padding-top: 8px; }
+        .btn-admin { color: #f43f5e !important; background: rgba(244, 63, 94, 0.1) !important; }
+        .btn-admin.active { background: #e11d48 !important; color: #fff !important; }
+        .btn-logout { margin-top: 8px; color: #ef4444 !important; background: rgba(239, 68, 68, 0.1) !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; }
+        .btn-logout:hover { background: #dc2626 !important; color: white !important; }
+        .content { flex: 1; padding: 22px 26px; height: 100%; overflow-y: auto; }
+        .tab-page { display: none; }
+        .tab-page.active { display: block; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #1e293b; padding-bottom: 12px; }
+        .page-header h2 { color: #fff; font-size: 17px; }
+        .id-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+        .id-item { background: #0f172a; padding: 10px 14px; border-radius: 8px; border: 1px solid #1e293b; }
+        .id-item label { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
+        .id-item span { font-size: 13px; color: #f1f5f9; font-weight: 700; }
+        .badge { display: inline-block; padding: 2px 7px; border-radius: 5px; font-size: 10px; font-weight: 700; }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+        .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        .badge-secondary { background: rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: right; }
+        .data-table th { background: #090e1a; color: #94a3b8; padding: 10px 12px; border-bottom: 1px solid #334155; }
+        .data-table td { padding: 10px 12px; color: #e2e8f0; border-bottom: 1px solid #1e293b; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; color: #cbd5e1; font-size: 11px; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 9px 12px; background: #1e293b; border: 1px solid #334155; border-radius: 8px; color: #fff; font-size: 13px; outline: none; }
+        .expire-chips-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+        .expire-chip { padding: 8px 14px; border-radius: 8px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .expire-chip:hover { border-color: #6366f1; color: #fff; }
+        .expire-chip.active { background: #4f46e5; border-color: #818cf8; color: #fff; box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
+        .action-btn { padding: 9px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; }
+        .btn-primary { background: #4f46e5; color: white; }
+        .btn-danger { background: #e11d48; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .admin-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+        .stat-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 12px; text-align: center; }
+        .stat-card-title { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+        .stat-card-num { font-size: 17px; font-weight: 800; color: #fff; }
+        .admin-tabs-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+        .admin-tab-chip { padding: 6px 12px; border-radius: 6px; background: #1e293b; border: 1px solid #334155; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .admin-tab-chip.active { background: #0284c7; border-color: #38bdf8; color: #fff; font-weight: 700; }
+        .perms-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .perm-chip { padding: 5px 10px; border-radius: 6px; background: #0f172a; border: 1px solid #334155; color: #94a3b8; font-size: 11px; cursor: pointer; }
+        .perm-chip.selected { background: #4f46e5; color: white; border-color: #6366f1; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; justify-content: center; align-items: center; z-index: 999; }
+        .modal-body { background: #1e293b; padding: 22px; border-radius: 12px; width: 490px; border: 1px solid #334155; }
+    </style>
+</head>
+<body>
+
+    <div class="panel-container">
+        <div class="sidebar">
+            <div class="brand-title">کنترل پنل کاربری</div>
+            <div class="brand-sub">هویت و امنیت (F2)</div>
+
+            <button class="nav-btn active" onclick="switchTab('profile', this)">📋 شناسنامه و وضعیت</button>
+            <button class="nav-btn" onclick="switchTab('security', this)">🔒 امنیت و ورود دوره‌ای</button>
+            <button class="nav-btn" onclick="switchTab('logs', this)">🌐 نشست‌ها و تاریخچه</button>
+            <button class="nav-btn" onclick="switchTab('referrals', this)">👥 معرف‌ها و زیرمجموعه</button>
+
+            <div class="admin-nav" id="adminNavSec" style="display: none;">
+                <button class="nav-btn btn-admin" onclick="switchTab('admin', this)">👑 مدیریت سرور (Admin)</button>
+            </div>
+
+            <button class="nav-btn btn-logout" onclick="openLogoutModal()">🚪 خروج از حساب</button>
+        </div>
+
+        <div class="content">
+
+            <div class="tab-page active" id="tab-profile">
+                <div class="page-header">
+                    <h2>شناسنامه شهروندی (User Dossier)</h2>
+                    <span class="badge badge-success">آنلاین</span>
+                </div>
+                <div class="id-card">
+                    <div class="id-item"><label>نام شهروند</label><span id="dossierName">...</span></div>
+                    <div class="id-item"><label>شناسه رفرال (کد عددی)</label><span id="dossierRefId" style="color:#38bdf8;">...</span></div>
+                    <div class="id-item"><label>موجودی نقدی</label><span id="dossierCash">...</span></div>
+                    <div class="id-item"><label>تاریخ عضویت اولیه</label><span id="dossierRegDate">...</span></div>
+                    <div class="id-item"><label>وضعیت ایمیل</label><span id="dossierEmail">...</span> <span id="dossierEmailBadge" class="badge"></span></div>
+                    <div class="id-item"><label>وضعیت شماره تماس</label><span id="dossierPhone">...</span> <span id="dossierPhoneBadge" class="badge"></span></div>
+                    <div class="id-item"><label>معرفی شده توسط</label><span id="dossierReferrer">ندارد</span></div>
+                    <div class="id-item"><label>سطح دسترسی</label><span id="dossierAdminLevel" style="color:#f59e0b;">...</span></div>
+                </div>
+            </div>
+
+            <div class="tab-page" id="tab-security">
+                <div class="page-header"><h2>تنظیمات امنیتی و چرخه ورود مجدد</h2></div>
+                <div class="form-grid">
+                    <div class="form-group"><label>رمز عبور جدید</label><input type="password" id="inputNewPass" placeholder="اگر تغییر نمی‌کند خالی بگذارید"></div>
+                    <div class="form-group"><label>تکرار رمز عبور جدید</label><input type="password" id="inputNewPassConfirm" placeholder="تکرار رمز..."></div>
+                    <div class="form-group"><label>آدرس ایمیل</label><input type="email" id="inputNewEmail"></div>
+                    <div class="form-group"><label>شماره تماس</label><input type="text" id="inputNewPhone"></div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label>هر چند روز یک‌بار جهت امنیت رمز مجدد خواسته شود؟</label>
+                        <div class="expire-chips-container">
+                            <button type="button" class="expire-chip" data-days="1" onclick="selectExpireChip(1)">۱ روز</button>
+                            <button type="button" class="expire-chip" data-days="3" onclick="selectExpireChip(3)">۳ روز</button>
+                            <button type="button" class="expire-chip active" data-days="7" onclick="selectExpireChip(7)">۷ روز (پیش‌فرض)</button>
+                            <button type="button" class="expire-chip" data-days="15" onclick="selectExpireChip(15)">۱۵ روز</button>
+                            <button type="button" class="expire-chip" data-days="30" onclick="selectExpireChip(30)">۳۰ روز</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="action-btn btn-primary" onclick="openSecurityConfirmModal()" style="margin-top:8px;">ذخیره تنظیمات امنیتی</button>
+            </div>
+
+            <div class="tab-page" id="tab-logs">
+                <div class="page-header"><h2>تاریخچه نشست‌ها و لاگین‌های حساب شما</h2></div>
+                <table class="data-table">
+                    <thead><tr><th>زمان و تاریخ</th><th>آدرس آی‌پی (IP)</th><th>سریال سیستم (Serial)</th><th>وضعیت</th></tr></thead>
+                    <tbody id="logsTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="tab-page" id="tab-referrals">
+                <div class="page-header"><h2>شبکه زیرمجموعه‌گیری و فعالیت رفرال‌ها</h2></div>
+                <div style="margin-bottom: 12px; color: #94a3b8; font-size: 13px;">کد رفرال شما: <strong id="myReferralCode" style="color: #38bdf8;"></strong></div>
+                <table class="data-table">
+                    <thead><tr><th>نام کاربر</th><th>تاریخ عضویت</th><th>آخرین فعالیت</th><th>موجودی</th><th>زیرمجموعه جذب‌کرده</th></tr></thead>
+                    <tbody id="referralsTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="tab-page" id="tab-admin">
+                <div class="page-header">
+                    <h2>مرکز کنترل مدیریت سرور</h2>
+                    <button class="action-btn btn-danger" onclick="openGlobalPurgeModal()">🚨 خروج همگانی</button>
+                </div>
+
+                <div class="admin-stats-grid">
+                    <div class="stat-card"><div class="stat-card-title">کل کاربران</div><div class="stat-card-num" id="statTotalUsers">۰</div></div>
+                    <div class="stat-card"><div class="stat-card-title">کاربران آنلاین</div><div class="stat-card-num" style="color:#4ade80;" id="statOnlineUsers">۰</div></div>
+                    <div class="stat-card"><div class="stat-card-title">مسدود شده‌ها</div><div class="stat-card-num" style="color:#f87171;" id="statBannedUsers">۰</div></div>
+                    <div class="stat-card"><div class="stat-card-title">در حالت سکوت</div><div class="stat-card-num" style="color:#fbbf24;" id="statMutedUsers">۰</div></div>
+                </div>
+
+                <div class="admin-tabs-bar">
+                    <button class="admin-tab-chip active" onclick="applyAdminFilter('all', this)">همه کاربران</button>
+                    <button class="admin-tab-chip" onclick="applyAdminFilter('online', this)">🟢 فقط آنلاین‌ها</button>
+                    <button class="admin-tab-chip" onclick="applyAdminFilter('banned', this)">🔴 مسدود شده‌ها</button>
+                    <button class="admin-tab-chip" onclick="applyAdminFilter('muted', this)">🔇 ساکت شده‌ها</button>
+                    <button class="admin-tab-chip" onclick="applyAdminFilter('staff', this)">👑 کادر مدیریت</button>
+                </div>
+
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <input type="text" id="adminSearch" style="flex:1; padding:7px 10px; background:#1e293b; border:1px solid #334155; border-radius:6px; color:#fff;" placeholder="جستجوی نام یا ID کاربر..." oninput="handleAdminSearch()">
+                </div>
+
+                <table class="data-table">
+                    <thead><tr><th>ID</th><th>نام کاربری</th><th>شماره تماس</th><th>رتبه</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+                    <tbody id="adminUsersTableBody"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal" id="logoutModal">
+        <div class="modal-body">
+            <h3 style="color:#ef4444; margin-bottom: 10px;">آیا برای خروج مطمئن هستید؟</h3>
+            <p style="color:#cbd5e1; font-size:12px; margin-bottom:16px;">موقعیت و کلیه مشخصات شما ذخیره شده و به صفحه لاگین بازخواهید گشت.</p>
+            <div style="display:flex; gap:8px;">
+                <button class="action-btn btn-danger" onclick="confirmLogout()">بله، خروج از حساب</button>
+                <button class="action-btn" style="background:#475569; color:#fff;" onclick="closeModal('logoutModal')">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="adminActionModal">
+        <div class="modal-body">
+            <h3 style="color:#fff; margin-bottom: 8px;">مدیریت کاربر: <span id="targetUserName"></span></h3>
+            <div id="targetUserStatusBox" style="background:#0f172a; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px; color:#cbd5e1;"></div>
+            <div class="form-group"><label>دلیل عملیات (Ban / Mute):</label><input type="text" id="actionReason" placeholder="دلیل مجازات..."></div>
+            <div class="form-group"><label>سطح ادمین (-1: عادی | 0: موسس):</label><input type="number" id="targetAdminLvl" min="-1" max="10"></div>
+            <div class="form-group">
+                <label>دسترسی‌ها:</label>
+                <div class="perms-container" id="permsChipsContainer">
+                    <span class="perm-chip" data-perm="kick" onclick="this.classList.toggle('selected')">Kick</span>
+                    <span class="perm-chip" data-perm="ban" onclick="this.classList.toggle('selected')">Ban</span>
+                    <span class="perm-chip" data-perm="unban" onclick="this.classList.toggle('selected')">Unban</span>
+                    <span class="perm-chip" data-perm="mute" onclick="this.classList.toggle('selected')">Mute</span>
+                    <span class="perm-chip" data-perm="unmute" onclick="this.classList.toggle('selected')">Unmute</span>
+                </div>
+            </div>
+            <div style="display:flex; gap:6px; margin-top:14px; flex-wrap:wrap;">
+                <button class="action-btn" id="btnToggleBan" onclick="executeToggleBan()">مسدودسازی</button>
+                <button class="action-btn" id="btnToggleMute" onclick="executeToggleMute()">سکوت</button>
+                <button class="action-btn btn-primary" onclick="executeSavePerms()">ذخیره اختیارات</button>
+                <button class="action-btn" style="background:#475569; color:white;" onclick="closeModal('adminActionModal')">بستن</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="securityConfirmModal">
+        <div class="modal-body">
+            <h3 style="color:#fff; margin-bottom: 10px;">تأیید ذخیره‌سازی اطلاعات</h3>
+            <div style="background:#0f172a; padding:12px; border-radius:8px; font-size:12px; color:#cbd5e1; margin-bottom:14px;">
+                <div>ایمیل: <strong id="confEmail" style="color:#38bdf8;"></strong></div>
+                <div>شماره: <strong id="confPhone" style="color:#38bdf8;"></strong></div>
+                <div>دوره ورود مجدد: <strong id="confExpire" style="color:#38bdf8;"></strong></div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="action-btn btn-primary" onclick="confirmSaveSecurity()">تأیید و ذخیره</button>
+                <button class="action-btn" style="background:#475569; color:#fff;" onclick="closeModal('securityConfirmModal')">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="globalPurgeModal">
+        <div class="modal-body">
+            <h3 style="color:#ef4444; margin-bottom: 10px;">🚨 اخطار خروج امنیتی همگانی</h3>
+            <p style="color:#cbd5e1; font-size:12px; margin-bottom:14px;">آیا از ارسال اخطار ۵ دقیقه‌ای و خروج تمامی بازیکنان از سرور اطمینان دارید؟</p>
+            <div style="display:flex; gap:8px;">
+                <button class="action-btn btn-danger" onclick="startGlobalPurge()">ارسال اخطار ۵ دقیقه‌ای</button>
+                <button class="action-btn" style="background:#475569; color:#fff;" onclick="closeModal('globalPurgeModal')">انصراف</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let userData = {};
+        let adminUsers = [];
+        let currentAdminFilter = 'all';
+        let selectedUserId = null;
+        let selectedUserObj = null;
+        let selectedExpireDays = 7;
+
+        function emitMTA(event, ...args) {
+            if (typeof mta !== "undefined" && mta.triggerEvent) {
+                mta.triggerEvent(event, ...args);
+                return true;
+            }
+            return false;
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-page').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            if (btn) btn.classList.add('active');
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = "none"; }
+        function openLogoutModal() { document.getElementById("logoutModal").style.display = "flex"; }
+        function openGlobalPurgeModal() { document.getElementById("globalPurgeModal").style.display = "flex"; }
+
+        function confirmLogout() {
+            closeModal("logoutModal");
+            localStorage.removeItem("auth_remember_token");
+            emitMTA("panel:logout");
+        }
+
+        function selectExpireChip(days) {
+            selectedExpireDays = Number(days);
+            document.querySelectorAll('.expire-chip').forEach(chip => {
+                chip.classList.toggle('active', Number(chip.getAttribute('data-days')) === selectedExpireDays);
+            });
+        }
+
+        function loadDashboardData(raw) {
+            if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch(e){} }
+            if (Array.isArray(raw)) raw = raw[0];
+            if (!raw) return;
+
+            userData = raw;
+            document.getElementById("dossierName").innerText = raw.username || "-";
+            document.getElementById("dossierRefId").innerText = "#" + (raw.id || "0");
+            document.getElementById("myReferralCode").innerText = (raw.username || "") + " (کد: #" + (raw.id || "0") + ")";
+            document.getElementById("dossierCash").innerText = "$" + Number(raw.money || 0).toLocaleString();
+            document.getElementById("dossierRegDate").innerText = raw.registered_date || "-";
+            document.getElementById("dossierEmail").innerText = raw.email || "-";
+            document.getElementById("dossierPhone").innerText = raw.phone_number || "ثبت نشده";
+            document.getElementById("dossierReferrer").innerText = raw.referred_by || "بدون معرف";
+
+            const adminLvl = Number(raw.admin_level);
+            let roleTitle = "کاربر عادی";
+            if (adminLvl === 0) roleTitle = "👑 سازنده و مالک سرور";
+            else if (adminLvl > 0) roleTitle = "🛡️ ادمین سطح " + adminLvl;
+            document.getElementById("dossierAdminLevel").innerText = roleTitle;
+
+            document.getElementById("inputNewEmail").value = raw.email || "";
+            document.getElementById("inputNewPhone").value = raw.phone_number || "";
+            if (raw.session_expire_days) selectExpireChip(raw.session_expire_days);
+
+            const emBadge = document.getElementById("dossierEmailBadge");
+            if (raw.email_verified == 1) { emBadge.innerText = "احراز شده ✓"; emBadge.className = "badge badge-success"; }
+            else { emBadge.innerText = "احراز نشده ✕"; emBadge.className = "badge badge-danger"; }
+
+            const phBadge = document.getElementById("dossierPhoneBadge");
+            if (raw.phone_verified == 1) { phBadge.innerText = "احراز شده ✓"; phBadge.className = "badge badge-success"; }
+            else { phBadge.innerText = "احراز نشده ✕"; phBadge.className = "badge badge-danger"; }
+
+            const logsTbody = document.getElementById("logsTableBody");
+            logsTbody.innerHTML = "";
+            (raw.logs || []).forEach(log => {
+                logsTbody.innerHTML += `<tr><td>${log.login_time}</td><td style="color:#38bdf8;">${log.ip}</td><td style="font-family:monospace; font-size:11px;">${log.serial}</td><td><span class="badge ${log.status === 'success' ? 'badge-success':'badge-danger'}">${log.status}</span></td></tr>`;
+            });
+
+            const refTbody = document.getElementById("referralsTableBody");
+            refTbody.innerHTML = "";
+            (raw.referrals || []).forEach(ref => {
+                refTbody.innerHTML += `<tr><td><strong>${ref.username}</strong></td><td>${ref.registered_date}</td><td>${ref.last_login || '-'}</td><td style="color:#4ade80;">$${Number(ref.money || 0).toLocaleString()}</td><td><span class="badge badge-success">${ref.sub_refs || 0} نفر</span></td></tr>`;
+            });
+
+            if (adminLvl >= 0) document.getElementById("adminNavSec").style.display = "block";
+        }
+
+        function loadAdminUserList(raw) {
+            if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch(e){} }
+            if (Array.isArray(raw) && raw.length > 0 && Array.isArray(raw[0])) raw = raw[0];
+            adminUsers = raw || [];
+            updateAdminStats();
+            renderAdminUsersTable();
+        }
+
+        function updateAdminStats() {
+            document.getElementById("statTotalUsers").innerText = adminUsers.length;
+            document.getElementById("statOnlineUsers").innerText = adminUsers.filter(u => u.is_online == 1).length;
+            document.getElementById("statBannedUsers").innerText = adminUsers.filter(u => u.is_banned == 1).length;
+            document.getElementById("statMutedUsers").innerText = adminUsers.filter(u => u.is_muted == 1).length;
+        }
+
+        function applyAdminFilter(filterType, btn) {
+            currentAdminFilter = filterType;
+            document.querySelectorAll('.admin-tab-chip').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderAdminUsersTable();
+        }
+
+        function handleAdminSearch() { renderAdminUsersTable(); }
+
+        function renderAdminUsersTable() {
+            const query = document.getElementById("adminSearch").value.toLowerCase().trim();
+            const tbody = document.getElementById("adminUsersTableBody");
+            tbody.innerHTML = "";
+
+            let list = adminUsers.slice();
+            if (currentAdminFilter === 'online') list = list.filter(u => u.is_online == 1);
+            else if (currentAdminFilter === 'banned') list = list.filter(u => u.is_banned == 1);
+            else if (currentAdminFilter === 'muted') list = list.filter(u => u.is_muted == 1);
+            else if (currentAdminFilter === 'staff') list = list.filter(u => u.admin_level >= 0);
+
+            if (query !== "") list = list.filter(u => (u.username || "").toLowerCase().includes(query) || String(u.id).includes(query));
+
+            if (list.length === 0) {
+                tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#64748b; padding:16px;'>کاربری یافت نشد</td></tr>";
+                return;
+            }
+
+            list.forEach(u => {
+                const isBanned = u.is_banned == 1;
+                const isMuted = u.is_muted == 1;
+                const isOnline = u.is_online == 1;
+                let rank = u.admin_level == 0 ? "👑 سازنده" : (u.admin_level > 0 ? "ادمین " + u.admin_level : "عادی");
+
+                let statusHtml = isOnline ? `<span class="badge badge-success">آنلاین 🟢</span> ` : `<span class="badge badge-secondary">آفلاین</span> `;
+                if (isBanned) statusHtml += `<span class="badge badge-danger">مسدود 🔴</span> `;
+                if (isMuted) statusHtml += `<span class="badge badge-warning">ساکت 🔇</span> `;
+
+                tbody.innerHTML += `<tr><td>#${u.id}</td><td><strong>${u.username}</strong></td><td>${u.phone_number || '-'}</td><td style="color:#f59e0b;">${rank}</td><td>${statusHtml}</td><td><button class="action-btn btn-primary" style="padding:3px 8px; font-size:11px;" onclick="openAdminModal(${u.id})">اقدام</button></td></tr>`;
+            });
+        }
+
+        function openAdminModal(id) {
+            selectedUserId = id;
+            selectedUserObj = adminUsers.find(u => u.id === id);
+            if (!selectedUserObj) return;
+
+            document.getElementById("targetUserName").innerText = selectedUserObj.username + " (#" + selectedUserObj.id + ")";
+            document.getElementById("targetAdminLvl").value = selectedUserObj.admin_level;
+            document.getElementById("actionReason").value = "";
+
+            const sBox = document.getElementById("targetUserStatusBox");
+            let sText = `<div>وضعیت آنلاین: ${selectedUserObj.is_online == 1 ? '<span style="color:#4ade80;">آنلاین</span>':'آفلاین'}</div>`;
+            if (selectedUserObj.is_banned == 1) sText += `<div style="color:#f87171; margin-top:3px;">مسدود شده توسط ${selectedUserObj.banned_by || 'Admin'} (دلیل: ${selectedUserObj.ban_reason || '-'})</div>`;
+            if (selectedUserObj.is_muted == 1) sText += `<div style="color:#fbbf24; margin-top:3px;">در حالت سکوت (دلیل: ${selectedUserObj.mute_reason || '-'})</div>`;
+            sBox.innerHTML = sText;
+
+            const btnBan = document.getElementById("btnToggleBan");
+            btnBan.innerText = selectedUserObj.is_banned == 1 ? "🟢 رفع مسدودیت (Unban)" : "🔴 مسدودسازی (Ban)";
+            btnBan.className = selectedUserObj.is_banned == 1 ? "action-btn btn-warning" : "action-btn btn-danger";
+
+            const btnMute = document.getElementById("btnToggleMute");
+            btnMute.innerText = selectedUserObj.is_muted == 1 ? "🔊 رفع سکوت (Unmute)" : "🔇 اعمال سکوت (Mute)";
+            btnMute.className = selectedUserObj.is_muted == 1 ? "action-btn btn-warning" : "action-btn btn-danger";
+
+            const currentPerms = (selectedUserObj.admin_perms || "").split(",");
+            document.querySelectorAll("#permsChipsContainer .perm-chip").forEach(chip => {
+                chip.classList.toggle("selected", currentPerms.includes(chip.getAttribute("data-perm")));
+            });
+            document.getElementById("adminActionModal").style.display = "flex";
+        }
+
+        function executeToggleBan() {
+            if (!selectedUserObj) return;
+            const action = selectedUserObj.is_banned == 1 ? "unban" : "ban";
+            const reason = document.getElementById("actionReason").value.trim() || "مدیریت سرور";
+            emitMTA("panel:adminAction", selectedUserId, action, reason, selectedUserObj.admin_level, selectedUserObj.admin_perms || "");
+            closeModal('adminActionModal');
+        }
+
+        function executeToggleMute() {
+            if (!selectedUserObj) return;
+            const action = selectedUserObj.is_muted == 1 ? "unmute" : "mute";
+            const reason = document.getElementById("actionReason").value.trim() || "مدیریت سرور";
+            emitMTA("panel:adminAction", selectedUserId, action, reason, selectedUserObj.admin_level, selectedUserObj.admin_perms || "");
+            closeModal('adminActionModal');
+        }
+
+        function executeSavePerms() {
+            const adminLvl = document.getElementById("targetAdminLvl").value;
+            const selectedPerms = [];
+            document.querySelectorAll("#permsChipsContainer .perm-chip.selected").forEach(c => selectedPerms.push(c.getAttribute("data-perm")));
+            emitMTA("panel:adminAction", selectedUserId, "save_perms", "", adminLvl, selectedPerms.join(","));
+            closeModal('adminActionModal');
+        }
+
+        function openSecurityConfirmModal() {
+            document.getElementById("confEmail").innerText = document.getElementById("inputNewEmail").value.trim() || "-";
+            document.getElementById("confPhone").innerText = document.getElementById("inputNewPhone").value.trim() || "-";
+            document.getElementById("confExpire").innerText = "هر " + selectedExpireDays + " روز یک‌بار";
+            document.getElementById("securityConfirmModal").style.display = "flex";
+        }
+
+        function confirmSaveSecurity() {
+            closeModal('securityConfirmModal');
+            const pass = document.getElementById("inputNewPass").value.trim();
+            const email = document.getElementById("inputNewEmail").value.trim();
+            const phone = document.getElementById("inputNewPhone").value.trim();
+            emitMTA("panel:updateSecurity", pass, email, phone, selectedExpireDays);
+        }
+
+        function startGlobalPurge() {
+            closeModal('globalPurgeModal');
+            emitMTA("panel:adminStartGlobalPurge");
+        }
+    </script>
+</body>
+</html>
