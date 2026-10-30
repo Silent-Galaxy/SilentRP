@@ -1,5 +1,11 @@
 # 🚑 سامانه هوشمند امداد و درمان (Advanced EMS & Death System)
 
+![0](image-7.png)
+![00](image-8.png)
+![000](image-9.png)
+
+
+
 سیستم شبیه‌ساز جامع بیهوشی، امداد جاده‌ای، انتقال اورژانسی و احیای بیمارستانی تحت بستر پلتفرم **Multi Theft Auto: San Andreas (MTA:SA)**.
 
 ---
