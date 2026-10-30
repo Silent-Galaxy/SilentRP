@@ -161,6 +161,7 @@ exports.server_rules:openRulesForPlayer(playerElement, "login" --[[ یا "view" 
 ---
 
 ### ۱. دیاگرام کلان معماری و اجزای سیستم (System Architecture & Component Diagram)
+![1](image.png)
 > تحلیل رابطه لایه‌ای میان هسته کلاینت، مرورگر محلی CEF، سرور، سرویس‌های جانبی و دیتابیس MySQL.
 
 ```plantuml
@@ -210,6 +211,7 @@ ServerCore --> TblRules : CRUD Versioned Rules
 ---
 
 ### ۲. دیاگرام توالی باز کردن پنل و انیمیشن نقش‌آفرینی (Player Immersion & Viewing Sequence)
+![2](image-1.png)
 > جریان داده و اقدامات همزمان در کلاینت و سرور هنگام فشردن کلید `F5` توسط کاربر عادی.
 
 ```plantuml
@@ -266,6 +268,7 @@ deactivate CL
 ---
 
 ### ۳. دیاگرام توالی چرخه حیات مدیریت و انتشار نسخه جدید (Admin Lifecycle & Live Broadcast)
+![3](image-2.png)
 > فرآیند تایید دسترسی ادمین، ثبت نسخه جدید در دیتابیس و همگام‌سازی زنده برای تمام کاربران سرور بدون ری‌استارت.
 
 ```plantuml
@@ -317,6 +320,7 @@ deactivate SV
 ---
 
 ### ۴. ماشین وضعیت چرخه حیات رابط کاربری و پلیر (State Machine Diagram)
+![4](image-3.png)
 > بررسی وضعیت‌های سیستم کلاینت و انیمیشن از حالت آماده‌باش تا مشاهده، ویرایش، و پاک‌سازی استثناها.
 
 ```plantuml
@@ -372,6 +376,7 @@ CLEANUP --> IDLE : Ready for Next Interaction
 ---
 
 ### ۵. فلوچارت تفصیلی پایش امنیتی سه لایه‌ای (3-Tier Security Authorization Pipeline)
+![5](image-4.png)
 > تصمیم‌گیری دقیق در تابع `checkPlayerAdminAccess` جهت جلوگیری از هرگونه دستکاری کلاینتی.
 
 ```plantuml
@@ -421,6 +426,7 @@ stop
 ---
 
 ### ۶. دیاگرام مدل داده و روابط جداول پایگاه داده (Entity-Relationship Diagram)
+![6](image-5.png)
 > نگاشت ساختار جدول‌های دیتابیس `server_rules` و نحوه ارتباط آن با اعتبارسنجی پذیرش در جدول `accounts`.
 
 ```plantuml
@@ -466,6 +472,7 @@ rules ||--o{ rules : "version archive history"
 ---
 
 ### ۷. پایپ‌لاین عبور داده‌های فارسی و مکانیزم امن هگز (Hex-Encoding UTF-8 Pipe)
+![7](image-6.png)
 > تحلیل معماری مهندسی ضد-موجی‌باک (Anti-Mojibake) برای تضمین نمایش بی‌نقص الفبای فارسی در ام‌تی‌ای.
 
 ```plantuml
