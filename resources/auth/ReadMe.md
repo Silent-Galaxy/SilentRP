@@ -202,6 +202,425 @@ start auth
 
 ---
 
+
+
+
+
+
+---
+
+## 📊 تحلیل دیاگرامی پروژه (PlantUML Diagrams)
+
+> کدهای زیر با استاندارد [PlantUML](https://editor.plantuml.com/) نگارش شده‌اند. می‌توانید هر قطعه‌کد را در ادیتور آنلاین PlantUML کپی کنید تا نمای گرافیکی آن تولید شود.
+
+---
+
+### ۱. دیاگرام توالی احراز هویت و ورود خودکار (Sequence Diagram)
+این دیاگرام چرخه کامل تعامل میان کلاینت وب (CEF)، اسکریپت‌های کلاینت/سرور، مکانیزم Rate-Limit، ارزیابی توکن و تایید قوانین فعال را نشان می‌دهد.
+
+```plantuml
+@startuml
+autonumber
+skinparam style strictuml
+skinparam SequenceMessageAlignment center
+
+actor "بازیکن" as User
+participant "CEF Browser\n(index.html)" as UI
+participant "Client Lua\n(client_auth.lua)" as C_Auth
+participant "Server Lua\n(server_auth.lua)" as S_Auth
+participant "Security Core\n(security.lua)" as Sec
+database "MySQL DB\n(accounts & rules)" as DB
+
+User -> UI: ورود به سرور / فشردن دکمه ورود
+alt توکن خودکار در LocalStorage موجود است
+    UI -> C_Auth: emitMTA("auth:clientAutoLogin", user, token)
+    C_Auth -> S_Auth: triggerServerEvent("auth:requestAutoLogin")
+else لاگین دستی
+    UI -> C_Auth: emitMTA("auth:clientSubmit", user, pass, rememberMe)
+    C_Auth -> S_Auth: triggerServerEvent("auth:requestLogin")
+end
+
+S_Auth -> Sec: isRateLimited(serial)
+alt تلاش بیش از حد مجاز (> 5 بار)
+    Sec --> S_Auth: خطا: قفل ۲۵ ثانیه‌ای
+    S_Auth -> C_Auth: triggerClientEvent("auth:response", false, پیام خطا)
+    C_Auth -> UI: showResponse(false, error)
+else نرخ مجاز است
+    S_Auth -> DB: استعلام مشخصات کاربر (Username / Password Hash)
+    DB --> S_Auth: بازگشت رکورد حساب
+    alt حساب مسدود است (is_banned = 1)
+        S_Auth -> C_Auth: اعلام مسدودی و دلیل بن
+        C_Auth -> UI: نمایش هشدار بن
+    else بررسی تطابق نسخه قوانین
+        S_Auth -> DB: SELECT MAX(version) FROM server_rules
+        DB --> S_Auth: آخرین نسخه قوانین
+        alt قوانین جدید تایید نشده
+            S_Auth -> C_Auth: باز کردن مودال پذیرش قوانین
+            User -> UI: مطالعه و تایید قوانین
+            UI -> S_Auth: triggerServerEvent("auth:serverAcceptRules")
+        end
+        S_Auth -> DB: بروزرسانی last_login, serial و ساخت توکن جدید
+        S_Auth -> C_Auth: triggerClientEvent("auth:loginSuccess")
+        C_Auth -> UI: انهدام Browser و فعال‌سازی کنترل‌ها
+        S_Auth -> User: اسپاون کاراکتر و بارگذاری دارایی
+    end
+end
+@enduml
+```
+
+---
+
+### ۲. دیاگرام فعالیت ثبت‌نام و توزیع پاداش معرف (Activity Diagram)
+این دیاگرام مسیر تصمیم‌گیری در زمان ساخت حساب جدید شامل فیلتر سریال تکراری، سیستم ضد تقلب رفرال و تزریق پاداش مالی به معرف و کاربر تازه وارد را تشریح می‌کند.
+
+```plantuml
+@startuml
+start
+:ورود اطلاعات کاربری (User, Pass, Email, Phone, Referral);
+:اعتبارسنجی فرانت‌اند (Regex ایمیل و آنالیز قدرت رمز عبور);
+
+if (اطلاعات در کلاینت معتبر است؟) then (بله)
+  :ارسال به سرور با Serial و IP سخت‌افزاری;
+  :بررسی محدودیت زمانی و حملات اسپم (Rate-Limiter);
+  
+  if (آیا با این سریال قبلاً اکانت ساخته شده؟) then (بله)
+    :رد درخواست: "شما قبلاً با این سیستم حساب ساخته‌اید!";
+    stop
+  else (خیر)
+    if (نام کاربری قبلاً ثبت شده؟) then (بله)
+      :رد درخواست: "این نام کاربری رزرو است!";
+      stop
+    else (خیر)
+      :محاسبه پاداش اولیه پایه ($1000);
+      if (کد معرف وارد شده و معتبر است؟) then (بله)
+        :افزایش موجودی کاربر جدید با بونوس رفرال (+$1500);
+        :واریز کمیسیون به حساب صاحب کد معرف (+$5000);
+      else (خیر)
+        :ادامه با موجودی پایه;
+      endif
+      :تولید هش SHA256 رمز عبور;
+      :ثبت اکانت در جدول accounts با نسخه قوانین فعال;
+      :ثبت لاگ موفق در جدول account_login_logs;
+      :اسپاون بازیکن در مختصات تعریف‌شده در Config;
+      stop
+    endif
+  endif
+else (خیر)
+  :نمایش خطای محلی روی فرم ورودی;
+  stop
+endif
+@enduml
+```
+
+---
+
+### ۳. دیاگرام ساختار کامپوننت‌ها و جریان داده (Component Diagram)
+نمایش دهنده تفکیک لایه‌های کاربری، لایه ارتباطی رخدادهای ام‌تی‌ای (Event-Driven)، ماژول‌های منطقی و لایه ذخیره‌سازی داده.
+
+```plantuml
+@startuml
+skinparam componentStyle uml2
+
+package "لایه مرورگر داخلی (CEF Front-End)" {
+    [Login UI (index.html)] as IndexUI
+    [Dashboard UI (panel.html)] as PanelUI
+    [Password Analyzer Engine] as PassMeter
+    IndexUI ..> PassMeter : استفاده
+}
+
+package "کلاینت بازی (MTA Client-Side Lua)" {
+    [client_auth.lua] as C_AuthMod
+    [client_panel.lua] as C_PanelMod
+    [DX Render Countdown Engine] as DXEngine
+    C_PanelMod ..> DXEngine : کنترل رندر
+}
+
+package "هسته و ماژول‌های سرور (Server-Side Lua)" {
+    [server_auth.lua] as S_AuthMod
+    [server_panel.lua] as S_PanelMod
+    [security.lua] as SecurityCore
+    [db.lua] as DBCore
+    [config.lua] as AppConfig
+    
+    S_AuthMod ..> SecurityCore : احراز صلاحیت
+    S_PanelMod ..> SecurityCore : بررسی سطح ادمین
+    S_AuthMod ..> AppConfig : دریافت مقادیر اولیه
+    S_PanelMod ..> AppConfig : دریافت پارامترها
+    S_AuthMod ..> DBCore : تراکنش اطلاعات
+    S_PanelMod ..> DBCore : استعلام و ویرایش
+}
+
+database "MySQL Database" {
+    folder "جداول داده" {
+        [accounts]
+        [account_login_logs]
+        [server_rules]
+        [user_rule_acceptances]
+    }
+}
+
+IndexUI <--> C_AuthMod : CEF ExecuteJS / triggerEvent
+PanelUI <--> C_PanelMod : CEF ExecuteJS / triggerEvent
+C_AuthMod <--> S_AuthMod : triggerServerEvent / triggerClientEvent
+C_PanelMod <--> S_PanelMod : triggerServerEvent / triggerClientEvent
+DBCore <--> [accounts] : dbExec / dbQuery
+DBCore <--> [account_login_logs] : dbExec
+DBCore <--> [server_rules] : dbQuery
+@enduml
+```
+
+---
+
+### ۴. دیاگرام مدل داده و پایگاه‌داده (Entity Relationship Diagram)
+ساختار جداول پایگاه داده رابطه‌ای، فیلدهای کلیدی، تایپ‌ها و نحوه پیوند سوابق لاگ، رفرال‌ها و اعتبارسنجی قوانین.
+
+```plantuml
+@startuml
+skinparam linetype ortho
+
+entity "accounts" as acc {
+    * id : INT <<PK, AUTO_INCREMENT>>
+    --
+    * username : VARCHAR(64) <<UNIQUE>>
+    * password : VARCHAR(64) [SHA256]
+    * email : VARCHAR(128)
+    phone_number : VARCHAR(32)
+    * serial : VARCHAR(64)
+    last_serial : VARCHAR(64)
+    referred_by : VARCHAR(64)
+    money : INT
+    skin : INT
+    x : FLOAT
+    y : FLOAT
+    z : FLOAT
+    rotation : FLOAT
+    remember_token : VARCHAR(128)
+    registered_date : TIMESTAMP
+    last_login : TIMESTAMP
+    admin_level : INT
+    session_expire_days : INT
+    accepted_rules_version : INT
+    is_banned : TINYINT(1)
+    ban_reason : VARCHAR(255)
+    banned_by : VARCHAR(64)
+    is_muted : TINYINT(1)
+    mute_reason : VARCHAR(255)
+    admin_perms : TEXT
+    email_verified : TINYINT(1)
+    phone_verified : TINYINT(1)
+}
+
+entity "account_login_logs" as logs {
+    * id : INT <<PK, AUTO_INCREMENT>>
+    --
+    * account_id : INT <<FK>>
+    * ip : VARCHAR(64)
+    * serial : VARCHAR(64)
+    * status : VARCHAR(32)
+    login_time : TIMESTAMP
+}
+
+entity "server_rules" as rules {
+    * id : INT <<PK, AUTO_INCREMENT>>
+    --
+    * version : INT
+    * title : VARCHAR(255)
+    * content : TEXT
+    created_by : VARCHAR(64)
+    created_at : TIMESTAMP
+    is_active : TINYINT(1)
+}
+
+entity "user_rule_acceptances" as rule_acc {
+    * id : INT <<PK, AUTO_INCREMENT>>
+    --
+    * account_id : INT <<FK>>
+    * rule_version : INT
+    accepted_at : TIMESTAMP
+}
+
+acc ||--o{ logs : "ثبت نشست‌ها"
+acc ||--o{ rule_acc : "سوابق تایید قوانین"
+rules ||--o{ rule_acc : "نسخه ارجاعی"
+acc ||--o{ acc : "معرفی زیرمجموعه (referred_by)"
+@enduml
+```
+
+---
+
+### ۵. دیاگرام ماشین حالت چرخه حیات بازیکن (State Machine Diagram)
+این دیاگرام کلیه حالات بازیکن از نخستین لحظه اتصال به سرور، مسدودیت، پذیرش قوانین، حضور در بازی، ورود به پنل F2 تا سناریوی تخلیه اضطراری را تحلیل می‌کند.
+
+```plantuml
+@startuml
+[*] --> Disconnected
+
+state "متصل به سرور (بدون هویت)" as Connecting {
+    [*] --> InitGatewayUI
+    InitGatewayUI: مسدودسازی Binds و قفل دوربین
+    InitGatewayUI: نمایش واسط لاگین/ثبت‌نام CEF
+}
+
+Connecting --> Authenticating : ارسال درخواست لاگین/اتو لاگین
+
+state Authenticating <<choice>>
+Authenticating --> Banned : is_banned == 1
+Authenticating --> RulesCheck : اطلاعات کاربری معتبر است
+Authenticating --> Connecting : اطلاعات اشتباه / مسدودی با Brute-force
+
+state "صفحه مسدودیت دائم" as Banned {
+    Banned: نمایش دلیل مسدودیت و نام مدیر
+}
+
+state "بررسی نسخه قوانین" as RulesCheck <<choice>>
+RulesCheck --> PendingRulesModal : accepted_rules_version < active_rule_version
+RulesCheck --> InGame : قوانین از قبل تایید شده است
+
+state "پنجره اجباری تایید قوانین" as PendingRulesModal {
+    PendingRulesModal: قفل فرآیند اسپاون
+    PendingRulesModal: انتظار برای کلیک دکمه پذیرش قوانین
+}
+PendingRulesModal --> InGame : تایید نسخه جدید قوانین
+
+state "درون بازی (In-Game Gameplay)" as InGame {
+    [*] --> CitizenFreeroam
+    CitizenFreeroam: بازگردانی دوربین به کاراکتر
+    CitizenFreeroam: فعال‌سازی Bindها و کنترل پلیر
+    
+    CitizenFreeroam --> ControlPanelOpen : فشردن کلید F2
+    ControlPanelOpen --> CitizenFreeroam : بستن کلید F2
+}
+
+state "داشبورد شهروندی و امنیت (F2 Panel)" as ControlPanelOpen {
+    ControlPanelOpen: مرور شناسنامه، مدیریت نشست و لاگ‌ها
+    ControlPanelOpen: ویرایش رمز، ایمیل و روزهای انقضای نشست
+}
+
+InGame --> UnderPurgeAlert : فعال‌سازی خروج همگانی توسط ادمین
+state "هشدار تخلیه همگانی (Purge Active)" as UnderPurgeAlert {
+    UnderPurgeAlert: نمایش بنر شمارش معکوس ۳۰۰ ثانیه‌ای با DX
+    UnderPurgeAlert: ذخیره‌سازی داده‌های حیاتی (Position, Cash)
+}
+
+UnderPurgeAlert --> Connecting : انقضای زمان ۳۰۰ ثانیه / انتقال به دایمنشن ۹۹۹
+InGame --> Disconnected : خروج از بازی (ذخیره مشخصات در دیتابیس)
+ControlPanelOpen --> Connecting : کلیک روی "خروج از حساب (Logout)"
+@enduml
+```
+
+---
+
+### ۶. دیاگرام موارد کاربرد (Use Case Diagram)
+تفکیک دقیق سطوح دسترسی میان کاربران مهمان (ثبت‌نام‌نشده)، شهروندان عادی و اعضای کادر مدیریت سرور.
+
+```plantuml
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "کاربر مهمان (Guest)" as Guest
+actor "شهروند (Citizen)" as User
+actor "مدیر سرور (Staff / Admin)" as Admin
+
+User -up-|> Guest
+Admin -up-|> User
+
+rectangle "سامانه احراز هویت و امنیت (Gateway)" {
+    usecase "ورود با نام و رمز عبور" as UC_Login
+    usecase "ورود خودکار امن (Auto-Login Token)" as UC_AutoLogin
+    usecase "ثبت‌نام با ارزیابی سختی رمز" as UC_Register
+    usecase "معرفی کد رفرال و دریافت بونوس" as UC_Referral
+    usecase "بازیابی رمز عبور با ایمیل" as UC_Forgot
+    usecase "مطالعه و پذیرش قوانین نسخه‌بندی‌شده" as UC_Rules
+}
+
+rectangle "کنترل پنل کاربری و مدیریت (F2 Panel)" {
+    usecase "مشاهده شناسنامه و وضعیت استعلام" as UC_Dossier
+    usecase "تنظیم چرخه انقضای نشست (۱ تا ۳۰ روز)" as UC_ExpireConfig
+    usecase "بازبینی لاگ‌های ورود و آی‌پی‌ها" as UC_AuditLogs
+    usecase "مشاهده آمار زیرمجموعه‌ها" as UC_RefStats
+    usecase "خروج امن از اکانت (Logout)" as UC_Logout
+    usecase "مدیریت کاربران (Ban / Mute / Perms)" as UC_AdminManage
+    usecase "آغاز خروج اضطراری سرور (Global Purge)" as UC_GlobalPurge
+}
+
+Guest --> UC_Login
+Guest --> UC_AutoLogin
+Guest --> UC_Register
+Guest --> UC_Referral
+Guest --> UC_Forgot
+Guest --> UC_Rules
+
+User --> UC_Dossier
+User --> UC_ExpireConfig
+User --> UC_AuditLogs
+User --> UC_RefStats
+User --> UC_Logout
+
+Admin --> UC_AdminManage
+Admin --> UC_GlobalPurge
+@enduml
+```
+
+---
+
+### ۷. دیاگرام سناریوی خروج اضطراری و پاک‌سازی سراسری (Timing & Sequence Diagram)
+تحلیل جزئیات امنیتی و ترتیب وقایع در زمان اجرای پروتکل خروج اضطراری (Global Purge) توسط رده‌های بالای مدیریتی سرور.
+
+```plantuml
+@startuml
+autonumber
+skinparam style strictuml
+
+actor "مدیر ارشد (Admin)" as Admin
+participant "Panel UI (F2)" as Panel
+participant "Server Panel Engine" as S_Panel
+participant "Client Render Loop" as C_Render
+database "MySQL Database" as DB
+collections "کلیه بازیکنان آنلاین" as Players
+
+Admin -> Panel: کلیک روی دکمه "🚨 خروج همگانی"
+Panel -> Panel: نمایش مودال تایید نهایی
+Admin -> Panel: تایید اجرای پروتکل
+Panel -> S_Panel: triggerServerEvent("panel:serverStartGlobalPurge")
+
+S_Panel -> S_Panel: بررسی دسترسی ادمین (admin_level >= 0)
+S_Panel -> S_Panel: ایجاد تایمر ۵ دقیقه‌ای (300,000 میلی‌ثانیه)
+S_Panel -> Players: triggerClientEvent("auth:startPurgeCountdown", 300)
+
+loop هر ۱ ثانیه به مدت ۳۰۰ ثانیه
+    Players -> C_Render: dxDrawRectangle (نوار قرمز وضعیت هشدار)
+    Players -> C_Render: dxDrawText ("خروج اضطراری کلیه بازیکنان ظرف MM:SS")
+end
+
+note over S_Panel, Players
+  بازیکنان ۵ دقیقه فرصت دارند در منطقه‌ای امن متوقف شوند.
+  در این بازه، دیتای موقعیت مکانی مداوم آماده همگام‌سازی است.
+end note
+
+... سپری شدن ۳۰۰ ثانیه (پایان تایمر سرور) ...
+
+S_Panel -> DB: UPDATE accounts SET remember_token = NULL\n(باطل‌سازی کلیه توکن‌های نشست برای امنیت کامل)
+loop به ازای تک تک بازیکنان سرور
+    S_Panel -> DB: ذخیره‌سازی X, Y, Z, Rotation, Money, Skin
+    S_Panel -> Players: پاک‌سازی ElementData کاربری (account:username, id)
+    S_Panel -> Players: انتقال به دایمنشن ایزوله (Dimension 999)
+    S_Panel -> Players: فریز کردن کاراکتر (setElementFrozen)
+    S_Panel -> Players: triggerClientEvent("auth:showLogin")
+end
+
+Players -> Players: محو شدن بازی و نمایش مجدد صفحه لاگین مدرن
+@enduml
+```
+
+
+
+
+
+
+
+
+
 <div align="center">
   <sub>طراحی و مهندسی‌شده با دقت بالا برای ارتقای استانداردهای سرورهای رول‌پلی MTA:SA 🚀</sub>
 </div>
