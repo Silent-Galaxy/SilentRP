@@ -3,3 +3,7 @@
 resource-cache/
 nresources/iran_cars/*n!resources/iran_cars/ReadMe.mdn*.dffn*.txd
 resource-cache/
+
+resources/iran_cars/*.dff
+resources/iran_cars/*.txd
+resource-cache/
